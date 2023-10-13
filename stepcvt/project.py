@@ -20,8 +20,8 @@ class STLConversionInfo:
     pitch = 0
     yaw = 0
     rotation = [roll, pitch, yaw]
-    linTol = 0.1
-    angTol = 0.1
+    linearTolerance = 0.1
+    angularTolerance = 0.1
     
     def to_dict(self):
-        return {'type':'STLConversionInfo', 'rotation':self.rotation, 'linearTolerance':self.linTol, 'angularTolerance':self.angTol}
+        return {'type':'STLConversionInfo', 'rotation':self.rotation, 'linearTolerance':self.linearTolerance, 'angularTolerance':self.angularTolerance}
