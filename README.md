@@ -12,3 +12,17 @@ For now, install in to the same environment that _cadquery_ is installed in.
 python3 setup.py develop
 ```
 
+## Testing
+
+This package uses `pytest` for testing. Please install pytest:
+
+```
+python -m pip install pytest
+```
+
+And run `pytest` as follows;
+
+```
+python3 -m pytest
+```
+
