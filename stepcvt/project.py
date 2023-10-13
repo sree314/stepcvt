@@ -16,12 +16,15 @@ class PartInfo:
     pass
 
 class STLConversionInfo:
-    roll = 0
-    pitch = 0
-    yaw = 0
-    rotation = [roll, pitch, yaw]
+    xRotation = 0
+    yRotation = 0
+    zRotation = 0
+    rotation = None
     linearTolerance = 0.1
     angularTolerance = 0.1
     
+    def __init__(self):
+        self.rotation = [xRotation, yRotation, zRotation]
+
     def to_dict(self):
         return {'type':'STLConversionInfo', 'rotation':self.rotation, 'linearTolerance':self.linearTolerance, 'angularTolerance':self.angularTolerance}
