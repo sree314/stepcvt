@@ -18,3 +18,7 @@ def test_STLConversionInfo_from_dict():
     assert si.linearTolerance == 0.1
     assert si.angularTolerance == 0.1
 
+def test_PartInfo_to_dict():
+    x = PartInfo()
+    d = x.to_dict()
+    assert isinstance(d, dict)
