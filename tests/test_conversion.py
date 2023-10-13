@@ -50,7 +50,7 @@ def test_PartInfo_from_dict():
     assert si.angularTolerance == 0.2
 
 def test_CADSource_to_dict():
-    x = Source()
+    x = CADSource()
     d = x.to_dict()
     assert isinstance(d, dict)
     assert d['type'] == 'CADSource'
