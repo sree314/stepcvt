@@ -13,7 +13,23 @@ class Source:
     pass
 
 class PartInfo:
-    pass
+    def __init__(self, id: str, info: [STLConversionInfo]):
+        self.part_id = id
+        self.info = info
+
+    @classmethod
+    def from_dict(cls, dict):
+        '''
+        Creates a PartInfo object from dictionary containning necessary information
+        '''
+        part_id = dict['part_id']
+        info: [STLConversionInfo] = []
+
+        info_dict_list = dict['info']
+        for info_dict in info_dict_list:
+            info.append(STLConversionInfo.from_dict(info_dict))
+
+        return cls(part_id, info)
 
 class STLConversionInfo:
     pass
