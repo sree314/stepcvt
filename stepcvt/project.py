@@ -10,6 +10,14 @@ class Project:
     pass
 
 class CADSource:
+    def __init__(self):
+        pass
+
+    def to_dict(self):
+        return {
+            'type': 'CADSource'
+        }
+
     pass
 
 class PartInfo:
