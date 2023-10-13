@@ -9,7 +9,7 @@
 class Project:
     pass
 
-class Source:
+class CADSource:
     pass
 
 class PartInfo:
