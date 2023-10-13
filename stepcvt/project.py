@@ -16,4 +16,14 @@ class PartInfo:
     pass
 
 class STLConversionInfo:
+    rotation: []
+    linearTolerance: float
+    angularTolerance: float
+    @classmethod 
+    def from_dict(cls, si_info):
+        x = STLConversionInfo() 
+        x.rotation = si_info.get('rotation')
+        x.linearTolerance = si_info.get('linearTolerance')
+        x.angularTolerance = si_info.get('angularTolerance')
+        return x
     pass
