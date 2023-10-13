@@ -9,7 +9,15 @@
 class Project:
     pass
 
-class Source:
+class CADSource:
+    def __init__(self):
+        pass
+
+    def to_dict(self):
+        return {
+            'type': 'CADSource'
+        }
+
     pass
 
 class PartInfo:
@@ -31,5 +39,9 @@ class PartInfo:
 
         return cls(part_id, info)
 
+    def to_dict(self):
+        return {'part_id': self.part_id, 
+                'info': [obj.to_dict() for obj in self.info]}       
+        
 class STLConversionInfo:
     pass
