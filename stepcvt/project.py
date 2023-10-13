@@ -13,7 +13,14 @@ class Source:
     pass
 
 class PartInfo:
-    pass
+    def __init__(self, id=None, list_of_objects=None):
+        self.part_id = id
+        self.objects = list_of_objects
+    
+    def to_dict(self):
+        return {'part_id': self.part_id, 
+                'info': [obj.to_dict() for obj in self.objects]}       
+        
 
 class STLConversionInfo:
     pass
