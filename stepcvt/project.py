@@ -20,10 +20,14 @@ class CADSource:
     pass
 
 
+class STLConversionInfo:
+    pass
+
+
 class PartInfo:
-    def __init__(self, id: str, info: [STLConversionInfo]):
-        self.part_id = id
-        self.info = info
+    def __init__(self):
+        self.part_id = ""
+        self.info = []
 
     @classmethod
     def from_dict(cls, dict):
@@ -41,7 +45,3 @@ class PartInfo:
 
     def to_dict(self):
         return {"part_id": self.part_id, "info": [obj.to_dict() for obj in self.info]}
-
-
-class STLConversionInfo:
-    pass
