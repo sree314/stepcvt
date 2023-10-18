@@ -41,7 +41,11 @@ class PartInfo:
         for info_dict in info_dict_list:
             info.append(STLConversionInfo.from_dict(info_dict))
 
-        return cls(part_id, info)
+        x = cls()
+        x.part_id = part_id
+        x.info = info
+
+        return x
 
     def to_dict(self):
         return {"part_id": self.part_id, "info": [obj.to_dict() for obj in self.info]}
