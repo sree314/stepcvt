@@ -6,9 +6,10 @@ Built as a project in CSC293/Fall 2023 at the University of Rochester.
 
 ## Installation
 
-For now, install in to the same environment that _cadquery_ is installed in.
+For now, install in to the same environment that `cadquery` is installed in.
 
 ```
+python3 -m pip install -r requirements-dev.txt
 python3 setup.py develop
 ```
 
@@ -17,10 +18,10 @@ python3 setup.py develop
 This package uses `pytest` for testing. Please install pytest:
 
 ```
-python -m pip install pytest
+python3 -m pip install pytest
 ```
 
-And run `pytest` as follows;
+And run `pytest` as follows:
 
 ```
 python3 -m pytest
