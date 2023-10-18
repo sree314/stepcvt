@@ -9,16 +9,16 @@
 class Project:
     pass
 
+
 class CADSource:
     def __init__(self):
         pass
 
     def to_dict(self):
-        return {
-            'type': 'CADSource'
-        }
+        return {"type": "CADSource"}
 
     pass
+
 
 class PartInfo:
     def __init__(self, id: str, info: [STLConversionInfo]):
@@ -27,21 +27,21 @@ class PartInfo:
 
     @classmethod
     def from_dict(cls, dict):
-        '''
+        """
         Creates a PartInfo object from dictionary containning necessary information
-        '''
-        part_id = dict['part_id']
+        """
+        part_id = dict["part_id"]
         info: [STLConversionInfo] = []
 
-        info_dict_list = dict['info']
+        info_dict_list = dict["info"]
         for info_dict in info_dict_list:
             info.append(STLConversionInfo.from_dict(info_dict))
 
         return cls(part_id, info)
 
     def to_dict(self):
-        return {'part_id': self.part_id, 
-                'info': [obj.to_dict() for obj in self.info]}       
-        
+        return {"part_id": self.part_id, "info": [obj.to_dict() for obj in self.info]}
+
+
 class STLConversionInfo:
     pass

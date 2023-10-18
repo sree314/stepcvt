@@ -25,4 +25,3 @@ And run `pytest` as follows;
 ```
 python3 -m pytest
 ```
-
