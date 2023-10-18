@@ -26,4 +26,4 @@ class STLConversionInfo:
         x.linearTolerance = si_info.get('linearTolerance')
         x.angularTolerance = si_info.get('angularTolerance')
         return x
-    pass
+    
