@@ -1,5 +1,6 @@
 # Classes to assist in loading and saving project information to files
 
+
 class ReaderWriter:
     def read(self, filename):
         """Read a file and generate a project"""
@@ -18,4 +19,3 @@ class JSONReaderWriter(ReaderWriter):
 
 class YAMLReaderWriter(ReaderWriter):
     pass
-
