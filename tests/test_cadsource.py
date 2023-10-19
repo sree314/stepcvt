@@ -63,7 +63,7 @@ def test_CADSource_from_dict():
     assert str(cs.path) == "/tmp/abc/xyz.step"
 
 
-# from_dict with part information
+# to_dict with part information
 def test_CADSource_to_dict_partinfo():
     pid1 = {
         "type": "PartInfo",
@@ -96,3 +96,32 @@ def test_CADSource_to_dict_partinfo():
 
     # also relies on PartInfo.to_dict() being correct
     assert all([x["type"] == "PartInfo" for x in d["partinfo"]])
+
+
+# from_dict with part information
+def test_CADSource_from_dict_partinfo():
+    d = {
+        "type": "CADSource",
+        "name": "Rapido",
+        "path": "xyz.step",
+        "partinfo": [
+            {
+                "type": "PartInfo",
+                "part_id": "first_part_id",
+                "info": [{"type": "TextInfo", "text": "Hello World"}],
+            },
+            {
+                "type": "PartInfo",
+                "part_id": "second_part_id",
+                "info": [{"type": "TextInfo", "text": "Goodbye, World"}],
+            },
+        ],
+    }
+
+    cs = CADSource.from_dict(d)
+
+    assert isinstance(cs, CADSource)
+    assert cs.name == d["name"]
+    assert str(cs.path) == d["path"]
+    assert len(cs.partinfo) == 2
+    assert all([isinstance(x, PartInfo) for x in cs.partinfo])
