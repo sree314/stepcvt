@@ -5,14 +5,21 @@
 # part. Each PartInfo contains a set of information, each for a
 # specific task. Right now, only the STLConversionTask is specified.
 
+from pathlib import Path
+
 
 class Project:
     pass
 
 
 class CADSource:
-    def __init__(self):
-        pass
+    def __init__(self, name: str = "", path: Path = None, partinfo: list = None):
+        # human-readable name, for use in the UI for this source file
+        # e.g. Rapido Hotend
+
+        self.name = name
+        self.path = path
+        self.partinfo = [] if partinfo is None else partinfo
 
     def to_dict(self):
         return {"type": "CADSource"}
