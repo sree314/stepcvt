@@ -17,11 +17,19 @@ class CADSource:
     def to_dict(self):
         return {"type": "CADSource"}
 
-    pass
-
 
 class STLConversionInfo:
-    pass
+    rotation: None
+    linearTolerance: float
+    angularTolerance: float
+
+    @classmethod
+    def from_dict(cls, si_info):
+        x = STLConversionInfo()
+        x.rotation = si_info.get("rotation")
+        x.linearTolerance = si_info.get("linearTolerance")
+        x.angularTolerance = si_info.get("angularTolerance")
+        return x
 
 
 class PartInfo:
