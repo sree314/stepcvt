@@ -18,7 +18,11 @@ class CADSource:
         return {"type": "CADSource"}
 
 
-class STLConversionInfo:
+class TaskInfo:
+    """Base class for all part-specific task information"""
+
+
+class STLConversionInfo(TaskInfo):
     rotation: None
     linearTolerance: float
     angularTolerance: float
@@ -32,10 +36,58 @@ class STLConversionInfo:
         return x
 
 
+class SlicerSettingsInfo(TaskInfo):
+    """Class for containing slicer-specific settings for the part,
+    organized as a key-value store. This implementation does not
+    allow the setting to be repeated.
+    """
+
+    def __init__(self, slicer: str = "", **kwargs):
+        self.slicer = slicer
+        self.settings = {}
+
+        for k, v in kwargs.items():
+            self.settings[k] = v
+
+    def to_dict(self):
+        return {
+            "type": "SlicerSettingsInfo",
+            "slicer": self.slicer,
+            "settings": self.settings,
+        }
+
+    @classmethod
+    def from_dict(cls, d):
+        if d.get("type", None) != "SlicerSettingsInfo":
+            raise ValueError(f"Incorrect value for type, expected SlicerSettingsInfo")
+
+        x = cls(slicer=d["slicer"], **d["settings"])
+        return x
+
+
+class TextInfo(TaskInfo):
+    """Class for storing human-readable text for the part"""
+
+    def __init__(self, text: str = ""):
+        self.text = text
+
+    def to_dict(self):
+        return {"type": "TextInfo", "text": self.text}
+
+    @classmethod
+    def from_dict(cls, d):
+        if d.get("type", None) != "TextInfo":
+            raise ValueError(f"Incorrect value for type, expected TextInfo")
+
+        return cls(text=d["text"])
+
+
 class PartInfo:
-    def __init__(self):
+    """Container for all part-specific task information"""
+
+    def __init__(self, part_id: str = "", info: list = None):
         self.part_id = ""
-        self.info = []
+        self.info = [] if info is None else info
 
     @classmethod
     def from_dict(cls, dict):
