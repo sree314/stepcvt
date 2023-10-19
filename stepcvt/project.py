@@ -9,7 +9,16 @@ from pathlib import Path
 
 
 class Project:
-    pass
+    def __init__(self, name: str = "", sources: list = None):
+        self.name = name
+        self.sources = [] if sources is not None else sources
+
+    def to_dict(self, root=None):
+        pass
+
+    @classmethod
+    def from_dict(cls, self):
+        pass
 
 
 class CADSource:
