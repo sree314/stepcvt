@@ -10,20 +10,15 @@ pinfo = {
             "linearTolerance": 0.1,
             "angularTolerance": 0.2,
         },
-        {
-            "type": "TextInfo",
-            "text": "Part must be printed using clear filament."
-        },
+        {"type": "TextInfo", "text": "Part must be printed using clear filament."},
         {
             "type": "SlicerSettingsInfo",
             "slicer": "Cura",
-            "settings": {
-                "layerHeight": "0.2mm",
-                "infillDensity": 0.4
-            }
-        }
+            "settings": {"layerHeight": "0.2mm", "infillDensity": 0.4},
+        },
     ],
 }
+
 
 def test_PartInfo_to_dict():
     x = PartInfo(part_id="some.part.id")
@@ -55,7 +50,7 @@ def test_PartInfo_from_dict():
 
     ti = pi.info[1]
     assert ti.text == pinfo["info"][1]["text"]
-    
+
     sli = pi.info[2]
     assert sli.slicer == pinfo["info"][2]["slicer"]
     assert sli.settings == pinfo["info"][2]["settings"]

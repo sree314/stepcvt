@@ -131,6 +131,6 @@ class PartInfo:
     def to_dict(self):
         return {
             "type": "PartInfo",
-            "part_id": self.part_id, 
-            "info": [obj.to_dict() for obj in self.info]
+            "part_id": self.part_id,
+            "info": [obj.to_dict() for obj in self.info],
         }
