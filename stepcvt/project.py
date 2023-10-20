@@ -37,6 +37,14 @@ class CADSource:
 class TaskInfo:
     """Base class for all part-specific task information"""
 
+    @classmethod
+    def gettype(cls, type_name):
+        """Return one of the subtypes given by the name"""
+        for t in cls.__subclasses__():
+            if t.__name__ == type_name:
+                return t
+        raise TypeError(f"{type_name} is not a valid TaskInfo type")
+
 
 class STLConversionInfo(TaskInfo):
     rotation: None
@@ -102,7 +110,7 @@ class PartInfo:
     """Container for all part-specific task information"""
 
     def __init__(self, part_id: str = "", info: list = None):
-        self.part_id = ""
+        self.part_id = part_id
         self.info = [] if info is None else info
 
     @classmethod
@@ -113,15 +121,16 @@ class PartInfo:
         part_id = dict["part_id"]
         info: [STLConversionInfo] = []
 
-        info_dict_list = dict["info"]
+        info_dict_list: [TaskInfo] = dict["info"]
         for info_dict in info_dict_list:
-            info.append(STLConversionInfo.from_dict(info_dict))
+            info_type: type[TaskInfo] = TaskInfo.gettype(info_dict["type"])
+            info.append(info_type.from_dict(info_dict))
 
-        x = cls()
-        x.part_id = part_id
-        x.info = info
-
-        return x
+        return cls(part_id, info)
 
     def to_dict(self):
-        return {"part_id": self.part_id, "info": [obj.to_dict() for obj in self.info]}
+        return {
+            "type": "PartInfo",
+            "part_id": self.part_id,
+            "info": [obj.to_dict() for obj in self.info],
+        }
