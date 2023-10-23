@@ -1,3 +1,5 @@
+# referred to https://cadquery.readthedocs.io/en/latest/assy.html
+
 import cadquery as cq
 
 
