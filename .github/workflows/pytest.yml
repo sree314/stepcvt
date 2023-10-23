@@ -5,18 +5,19 @@ on:
       - main
 jobs:
   test:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4.1.1
     - uses: actions/setup-python@v4.7.1
       with:
-        python-version: ">=3.6.0"
+        python-version: "3.8.0 - 3.10"
     - name: Install dependencies
       run: |
-        python3 -m pip install -r requirements-dev.txt
+        python3 -m pip install -r requirements.txt
         python3 setup.py develop
         python3 -m pip install pytest
     - name: Run tests
       run: |
         pytest
-  
