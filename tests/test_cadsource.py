@@ -1,16 +1,18 @@
 import pytest
-
 from stepcvt.project import CADSource, PartInfo, TextInfo
 from pathlib import Path
 
+# python -m pytest -k "test_cadsource.py"
 
 def test_CADSource_to_dict():
     x = CADSource(name="Rapido Hotend", path=Path("xyz.step"))
     d = x.to_dict()
     assert isinstance(d, dict)
     assert d["type"] == "CADSource"
-    assert d["name"] == name
-    assert d["path"] == "xyz.step"  # note: this is not a path, but a string
+    assert d["name"] == x.name
+    assert d["path"] == "xyz.step"  
+    
+    # note: this is not a path, but a string
 
     # to_dict() should not return absolute paths
     # In this example, the path is not absolute, so this is fine.
@@ -23,14 +25,16 @@ def test_CADSource_to_dict():
 
 
 def test_CADSource_to_dict_absolute():
-    x = CADSource(name="Rapido Hotend", path=Path("/tmp/abc/xyz.step"))
+    x = CADSource(name="Rapido Hotend", path=Path("C:/tmp/abc/xyz.step"))
+    # In Linux, /tmp/abc/xyz.step would be an absolute path, 
+    # but on Windows, an absolute path would look like C:\tmp\abc\xyz.step
 
     # note the provision of the optional root path so that to_dict()
     # can return the appropriate relative path
     d = x.to_dict(root=Path("/tmp"))
     assert isinstance(d, dict)
     assert d["type"] == "CADSource"
-    assert d["name"] == name
+    assert d["name"] == x.name
     assert d["path"] == "abc/xyz.step"  # note: this is not a path, but a string
 
     p = Path(d["path"])
@@ -38,8 +42,7 @@ def test_CADSource_to_dict_absolute():
 
 
 def test_CADSource_to_dict_absolute_error():
-    x = CADSource(name="Rapido Hotend", path=Path("/tmp/abc/xyz.step"))
-
+    x = CADSource(name="Rapido Hotend", path=Path("C:/tmp/abc/xyz.step")) 
     # should raise error when path is absolute, but to_dict is not
     # provided the optional root parameter
 
@@ -60,7 +63,7 @@ def test_CADSource_from_dict():
     # the root parameter should be combined with the path stored in
     # the dictionary and converted into an absolute path when processing
     assert cs.path.is_absolute()
-    assert str(cs.path) == "/tmp/abc/xyz.step"
+    assert str(cs.path).replace("\\", "/") == "C:/tmp/abc/xyz.step" # modified to accomodate windows path
 
 
 # to_dict with part information
