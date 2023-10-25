@@ -51,12 +51,26 @@ class STLConversionInfo(TaskInfo):
     linearTolerance: float
     angularTolerance: float
 
+    def __init__(self, rotation: None, linearTolerance: float, angularTolerance: float):
+        self.rotation = rotation
+        self.linearTolerance = linearTolerance
+        self.angularTolerance = angularTolerance
+
+    def to_dict(self):
+        return {
+            "type": "STLConversionInfo",
+            "rotation": self.rotation,
+            "linearTolerance": self.linearTolerance,
+            "angularTolerance": self.angularTolerance,
+        }
+
     @classmethod
     def from_dict(cls, si_info):
-        x = STLConversionInfo()
-        x.rotation = si_info.get("rotation")
-        x.linearTolerance = si_info.get("linearTolerance")
-        x.angularTolerance = si_info.get("angularTolerance")
+        x = STLConversionInfo(
+            rotation=si_info.get("rotation"),
+            linearTolerance=si_info.get("linearTolerance"),
+            angularTolerance=si_info.get("angularTolerance"),
+        )
         return x
 
 
