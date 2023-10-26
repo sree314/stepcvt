@@ -5,7 +5,7 @@
 # part. Each PartInfo contains a set of information, each for a
 # specific task. Right now, only the STLConversionTask is specified.
 
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePath, PurePosixPath
 
 
 class Project:
@@ -31,21 +31,18 @@ class CADSource:
         self.partinfo = [] if partinfo is None else partinfo
 
     def to_dict(self, root=None):     
-        if isinstance(self.path, str):
-            path = Path(self.path)
-        else:
-            path = self.path
+        path = PurePath(self.path)
+        drive = path.drive
 
         if path.is_absolute():
             if not root:
                 raise AssertionError("Root must be provided for absolute paths!")
-            path = PurePosixPath(path).relative_to("C:" / root)
-        else:
-            path = path
+            if drive:
+                path = path.relative_to(drive / root)
 
         return {"type": "CADSource",
                 "name": self.name,
-                "path": str(path).replace("\\", "/"),
+                "path": str(path.as_posix()),
                 "partinfo": self.partinfo
                 }
     
