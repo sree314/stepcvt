@@ -98,6 +98,19 @@ class STLConversionInfo(TaskInfo):
         )
         return x
 
+    def rotate(self, part: cq.Assembly) -> cq.Assembly:
+        """returns a rotated Cadquery Assembly object"""
+        # rotate takes two vector to form a rotational axis, then applies the rotation degree to that axis
+        # so has to make own x, y, z axis
+        for i in range(3):
+            part = part.rotate(
+                (0, 0, 0),
+                # (1,0,0), (0,1,0), (0,0,1)
+                tuple(1 if n == i else 0 for n in range(3)),
+                self.rotation[i],
+            )
+        return part
+
 
 class SlicerSettingsInfo(TaskInfo):
     """Class for containing slicer-specific settings for the part,
@@ -168,15 +181,7 @@ class PartInfo:
         )
         assem = self._cad.toCompound()
         if stlinfo is not None:
-            # rotate takes two vector to form a rotational axis, then applies the rotation degree to that axis
-            # so has to make own x, y, z axis
-            for i in range(3):
-                assem = assem.rotate(
-                    (0, 0, 0),
-                    # (1,0,0), (0,1,0), (0,0,1)
-                    tuple(1 if n == i else 0 for n in range(3)),
-                    stlinfo.rotation[i],
-                )
+            assem = stlinfo.rotate(assem)
             cq.exporters.export(
                 assem,
                 stl_output,
