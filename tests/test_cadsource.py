@@ -2,6 +2,7 @@ import pytest
 
 from stepcvt.project import CADSource, PartInfo, TextInfo
 from pathlib import Path
+import models
 
 
 def test_CADSource_to_dict():
@@ -125,3 +126,44 @@ def test_CADSource_from_dict_partinfo():
     assert str(cs.path) == d["path"]
     assert len(cs.partinfo) == 2
     assert all([isinstance(x, PartInfo) for x in cs.partinfo])
+
+
+def test_CADSource_load_step_file(tmp_path):
+    model_file = tmp_path / "book.step"
+    book = models.book_model()
+    book.save(str(model_file))
+
+    cs = CADSource.load_step_file("book", model_file)
+
+    assert isinstance(cs, CADSource)
+    assert cs.name == "book"
+    assert cs.path == model_file
+
+
+def test_CADSource_parts(tmp_path):
+    model_file = tmp_path / "book.step"
+    book = models.book_model()
+    book.save(str(model_file))
+
+    cs = CADSource.load_step_file("book", model_file)
+
+    # for now, assume partids are the same as the names
+    expected_partids = set(["book_body", "spine"])
+
+    for partid, _ in cs.parts():
+        assert partid in expected_partids
+        expected_partids.remove(partid)
+
+
+def test_CADSource_add_partinfo(tmp_path):
+    model_file = tmp_path / "book.step"
+    book = models.book_model()
+    book.save(str(model_file))
+
+    cs = CADSource.load_step_file("book", model_file)
+
+    for partid, obj in cs.parts():
+        pi = cs.add_partinfo(partid, obj)
+
+        assert isinstance(pi, PartInfo)
+        assert pi.part_id == partid

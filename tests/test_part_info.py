@@ -1,4 +1,5 @@
 from stepcvt.project import PartInfo, STLConversionInfo, TextInfo, SlicerSettingsInfo
+import models
 
 pinfo = {
     "type": "PartInfo",
@@ -54,3 +55,14 @@ def test_PartInfo_from_dict():
     sli = pi.info[2]
     assert sli.slicer == pinfo["info"][2]["slicer"]
     assert sli.settings == pinfo["info"][2]["settings"]
+
+
+def test_PartInfo_from_part():
+    book = models.book_model()
+
+    for o, oo in book.traverse():
+        pi = PartInfo.from_part(o, oo)
+        assert isinstance(pi, PartInfo)
+        assert pi.part_id == o
+        assert pi._cad is oo  # use _cad as the hidden attribute
+        break  # do this only for the first object

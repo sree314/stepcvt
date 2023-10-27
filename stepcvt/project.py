@@ -11,9 +11,12 @@ from pathlib import Path
 class Project:
     def __init__(self, name: str = "", sources: list = None):
         self.name = name
-        self.sources = [] if sources is not None else sources
+        self.sources = [] if sources is None else sources
 
     def to_dict(self, root=None):
+        pass
+
+    def add_source(self, name: str, path: Path):
         pass
 
     @classmethod
@@ -29,6 +32,27 @@ class CADSource:
         self.name = name
         self.path = path
         self.partinfo = [] if partinfo is None else partinfo
+
+    def add_partinfo(self, part_id, obj):
+        # create a PartInfo object with the specified part_id, and
+        # associate it with obj (which can be stored as a hidden
+        # attribute). This is usually done by using the
+        # PartInfo.from_part factory method.
+        #
+        # It is assumed that part_id and obj are obtained from
+        # invoking parts()
+        pass
+
+    def parts(self):
+        # returns a list of parts in the CAD model as list of (part_id, object)
+        # where object corresponds to the shape in the OCCT library
+        pass
+
+    @classmethod
+    def load_step_file(cls, name: str, path: Path):
+        # should load the STEP file and return a CADSource object
+        # the loaded file can be a hidden attribute on CADSource
+        pass
 
     def to_dict(self):
         return {"type": "CADSource"}
@@ -126,6 +150,22 @@ class PartInfo:
     def __init__(self, part_id: str = "", info: list = None):
         self.part_id = part_id
         self.info = [] if info is None else info
+
+    def add_info(self, info: TaskInfo):
+        # adds the provided info to the self.info list
+        pass
+
+    def export_to_stl(self, stl_output: Path):
+        # search partinfo for STLConversionInfo, if found
+        # apply the STLConversionInfo transformations to the part
+        # if not found, simply export the part to the stl_output specified.
+        pass
+
+    @classmethod
+    def from_part(cls, part_id: str, part):
+        # create and return a PartInfo object
+        # with the specified part_id and encapsulating the provided part object.
+        pass
 
     @classmethod
     def from_dict(cls, dict):
