@@ -14,14 +14,14 @@ class Project:
         self.sources = [] if sources is None else sources
 
     def to_dict(self, root=None):
-        pass
+        return {"type": "Project", "name": self.name}
 
     def add_source(self, name: str, path: Path):
         pass
 
     @classmethod
-    def from_dict(cls, self):
-        pass
+    def from_dict(cls, d):
+        return Project(d["name"])
 
 
 class CADSource:
