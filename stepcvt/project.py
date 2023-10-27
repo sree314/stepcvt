@@ -14,13 +14,13 @@ class Project:
         self.sources = [] if sources is None else sources
 
     def to_dict(self, root=None):
-        return {'type':'Project', 'name':self.name}
+        return {"type": "Project", "name": self.name}
 
     def add_source(self, name: str, path: Path):
         pass
 
     @classmethod
-    def from_dict(cls, d): 
+    def from_dict(cls, d):
         return Project(d["name"])
 
 
