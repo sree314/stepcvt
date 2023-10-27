@@ -39,6 +39,8 @@ class CADSource:
                 raise AssertionError("Root must be provided for absolute paths!")
             if drive:
                 path = path.relative_to(drive / root)
+            else:
+                path = path.relative_to(root)
 
         return {"type": "CADSource",
                 "name": self.name,
@@ -48,9 +50,9 @@ class CADSource:
     
     def from_dict(self, root=None):       
         if root:
-            path = Path("C:" / root / self["path"])
+            path = PurePath(root / self["path"])
         else:
-            path = Path(self["path"])
+            path = PurePath(self["path"])
 
         cs = CADSource(name=self["name"], path=path, partinfo=self["partinfo"])
         return cs
