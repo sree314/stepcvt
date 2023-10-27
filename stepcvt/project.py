@@ -20,7 +20,7 @@ class Project:
         pass
 
     @classmethod
-    def from_dict(cls, d):
+    def from_dict(cls, d): 
         return Project(d["name"])
 
 
