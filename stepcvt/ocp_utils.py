@@ -16,7 +16,13 @@ from cadquery.occ_impl.shapes import downcast
 from .utils import distance
 from webcolors import hex_to_rgb
 
-from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE, TopAbs_SOLID, TopAbs_WIRE, TopAbs_VERTEX
+from OCP.TopAbs import (
+    TopAbs_EDGE,
+    TopAbs_FACE,
+    TopAbs_SOLID,
+    TopAbs_WIRE,
+    TopAbs_VERTEX,
+)
 from OCP.TopoDS import TopoDS_Compound, TopoDS_Shape, TopoDS_Edge
 from OCP.TopExp import TopExp_Explorer
 
@@ -130,7 +136,14 @@ class BoundingBox(object):
             return (values[0], values[3], values[1], values[4], values[2], values[5])
         else:
             c = self._center_of_mass(obj)
-            bb = (c[0] - tol, c[0] + tol, c[1] - tol, c[1] + tol, c[2] - tol, c[2] + tol)
+            bb = (
+                c[0] - tol,
+                c[0] + tol,
+                c[1] - tol,
+                c[1] + tol,
+                c[2] - tol,
+                c[2] + tol,
+            )
             print("\nVoid Bounding Box", bb)
             return bb
 
@@ -143,7 +156,19 @@ class BoundingBox(object):
             self.ymin + self.ysize / 2.0,
             self.zmin + self.zsize / 2.0,
         )
-        self.max = max([abs(x) for x in (self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax)])
+        self.max = max(
+            [
+                abs(x)
+                for x in (
+                    self.xmin,
+                    self.xmax,
+                    self.ymin,
+                    self.ymax,
+                    self.zmin,
+                    self.zmax,
+                )
+            ]
+        )
 
     def is_empty(self):
         return (
@@ -156,7 +181,11 @@ class BoundingBox(object):
         return max(
             [
                 distance(self.center, v)
-                for v in itertools.product((self.xmin, self.xmax), (self.ymin, self.ymax), (self.zmin, self.zmax))
+                for v in itertools.product(
+                    (self.xmin, self.xmax),
+                    (self.ymin, self.ymax),
+                    (self.zmin, self.zmax),
+                )
             ]
         )
 
@@ -164,7 +193,11 @@ class BoundingBox(object):
         return max(
             [
                 np.linalg.norm(v)
-                for v in itertools.product((self.xmin, self.xmax), (self.ymin, self.ymax), (self.zmin, self.zmax))
+                for v in itertools.product(
+                    (self.xmin, self.xmax),
+                    (self.ymin, self.ymax),
+                    (self.zmin, self.zmax),
+                )
             ]
         )
 
@@ -218,7 +251,9 @@ def bounding_box(objs, loc=None, optimal=False):
     else:
         compound = objs
 
-    return BoundingBox(compound if loc is None else compound.Moved(loc), optimal=optimal)
+    return BoundingBox(
+        compound if loc is None else compound.Moved(loc), optimal=optimal
+    )
 
 
 def np_bbox(p, t, q):
@@ -235,7 +270,14 @@ def np_bbox(p, t, q):
 
     bbmin = np.min(v, axis=0)
     bbmax = np.max(v, axis=0)
-    return {"xmin": bbmin[0], "xmax": bbmax[0], "ymin": bbmin[1], "ymax": bbmax[1], "zmin": bbmin[2], "zmax": bbmax[2]}
+    return {
+        "xmin": bbmin[0],
+        "xmax": bbmax[0],
+        "ymin": bbmin[1],
+        "ymax": bbmax[1],
+        "zmin": bbmin[2],
+        "zmax": bbmax[2],
+    }
 
 
 def length(edge_or_wire):
@@ -250,7 +292,6 @@ def length(edge_or_wire):
 
 
 def write_stl_file(compound, filename, tolerance=None, angular_tolerance=None):
-
     # Remove previous mesh data
     BRepTools.Clean_s(compound)
 
@@ -303,10 +344,12 @@ def deserialize(buffer):
 
 # OCP types and accessors
 
+
 def is_line(topods_edge):
     c = BRepAdaptor_Curve(topods_edge)
     return c.GetType() == GeomAbs_CurveType.GeomAbs_Line
-    
+
+
 def _get_topo(shape, topo):
     explorer = TopExp_Explorer(shape, topo)
     hashes = {}

@@ -7,7 +7,12 @@ from OCP.STEPCAFControl import STEPCAFControl_Reader
 from OCP.TDF import TDF_LabelSequence, TDF_Label, TDF_ChildIterator
 from OCP.TCollection import TCollection_ExtendedString
 from OCP.TDocStd import TDocStd_Document
-from OCP.XCAFDoc import XCAFDoc_DocumentTool, XCAFDoc_ColorSurf, XCAFDoc_ColorGen, XCAFDoc_ColorCurv
+from OCP.XCAFDoc import (
+    XCAFDoc_DocumentTool,
+    XCAFDoc_ColorSurf,
+    XCAFDoc_ColorGen,
+    XCAFDoc_ColorCurv,
+)
 from OCP.TDataStd import TDataStd_Name
 from OCP.TCollection import TCollection_AsciiString
 from OCP.Quantity import Quantity_ColorRGBA
@@ -42,7 +47,9 @@ class StepReader:
         self.color_tool = None
         self.assemblies = None
 
-    def _create_assembly_object(self, name, loc=None, color=None, shape=None, children=None):
+    def _create_assembly_object(
+        self, name, loc=None, color=None, shape=None, children=None
+    ):
         """
         Create a new object
         :param name: object name
@@ -103,7 +110,6 @@ class StepReader:
 
         colors = []
         if self.analyse_faces:
-
             # Find all face colors
             exp = TopExp_Explorer(shape, TopAbs_FACE)
             while exp.More():
@@ -300,7 +306,9 @@ class StepReader:
                 name = f"{obj['name']}_{names[name]}"
 
                 a.add(
-                    to_workplane(obj["shape"]) if obj["shapes"] is None else walk(obj["shapes"]),
+                    to_workplane(obj["shape"])
+                    if obj["shapes"] is None
+                    else walk(obj["shapes"]),
                     name=name,
                     color=None if obj["color"] is None else cq.Color(*obj["color"]),
                     loc=cq.Location(obj.get("loc")),
@@ -309,17 +317,26 @@ class StepReader:
             return a
 
         if len(self.assemblies) == 0 or (
-            self.assemblies[0]["shapes"] is not None and len(self.assemblies[0]["shapes"]) == 0
+            self.assemblies[0]["shapes"] is not None
+            and len(self.assemblies[0]["shapes"]) == 0
         ):
             raise ValueError("Empty assembly list")
 
         if len(self.assemblies) == 1:
             assembly = self.assemblies[0]
-            return walk(assembly["shapes"], assembly["name"], cq.Location(assembly["loc"]))
+            return walk(
+                assembly["shapes"], assembly["name"], cq.Location(assembly["loc"])
+            )
         else:
             result = cq.Assembly(name="Group")
             for assembly in self.assemblies:
-                result.add(walk(assembly["shapes"], assembly["name"], cq.Location(assembly["loc"])))
+                result.add(
+                    walk(
+                        assembly["shapes"],
+                        assembly["name"],
+                        cq.Location(assembly["loc"]),
+                    )
+                )
 
         if path != None:
             result = result.objects[path].obj
