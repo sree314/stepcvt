@@ -6,6 +6,7 @@
 # specific task. Right now, only the STLConversionTask is specified.
 
 from pathlib import Path
+import cadquery as cq
 
 
 class Project:
@@ -147,25 +148,50 @@ class TextInfo(TaskInfo):
 class PartInfo:
     """Container for all part-specific task information"""
 
-    def __init__(self, part_id: str = "", info: list = None):
+    def __init__(self, part_id: str = "", info: list = None, part: cq.Assembly = None):
         self.part_id = part_id
         self.info = [] if info is None else info
+        self._cad: cq.Assembly = part
 
     def add_info(self, info: TaskInfo):
-        # adds the provided info to the self.info list
-        pass
+        """adds the provided info to the self.info list"""
+        self.info.append(info)
 
     def export_to_stl(self, stl_output: Path):
-        # search partinfo for STLConversionInfo, if found
-        # apply the STLConversionInfo transformations to the part
-        # if not found, simply export the part to the stl_output specified.
-        pass
+        """
+        search partinfo for STLConversionInfo, if found
+        apply the STLConversionInfo transformations to the part
+        if not found, simply export the part to the stl_output specified.
+        """
+        stlinfo = next(
+            (info for info in self.info if isinstance(info, STLConversionInfo)), None
+        )
+        assem = self._cad.toCompound()
+        if stlinfo is not None:
+            # rotate takes two vector to form a rotational axis, then applies the rotation degree to that axis
+            # so has to make own x, y, z axis
+            for i in range(3):
+                assem = assem.rotate(
+                    (0, 0, 0),
+                    # (1,0,0), (0,1,0), (0,0,1)
+                    tuple(1 if n == i else 0 for n in range(3)),
+                    stlinfo.rotation[i],
+                )
+            cq.exporters.export(
+                assem,
+                stl_output,
+                tolerance=stlinfo.linearTolerance,
+                angularTolerance=stlinfo.angularTolerance,
+            )
+        cq.exporters.export(assem, stl_output)
 
     @classmethod
     def from_part(cls, part_id: str, part):
-        # create and return a PartInfo object
-        # with the specified part_id and encapsulating the provided part object.
-        pass
+        """
+        create and return a PartInfo object
+        with the specified part_id and encapsulating the provided part object.
+        """
+        return cls(part_id, part=part)
 
     @classmethod
     def from_dict(cls, dict):
