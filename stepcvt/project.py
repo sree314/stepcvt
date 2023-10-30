@@ -5,20 +5,23 @@
 # part. Each PartInfo contains a set of information, each for a
 # specific task. Right now, only the STLConversionTask is specified.
 
-from pathlib import Path, PurePath, PurePosixPath
-
+from pathlib import Path, PurePath
+from jupyter_cadquery import stepreader
 
 class Project:
     def __init__(self, name: str = "", sources: list = None):
         self.name = name
-        self.sources = [] if sources is not None else sources
+        self.sources = [] if sources is None else sources
 
     def to_dict(self, root=None):
+        return {"type": "Project", "name": self.name}
+
+    def add_source(self, name: str, path: Path):
         pass
 
     @classmethod
-    def from_dict(cls, self):
-        pass
+    def from_dict(cls, d):
+        return Project(d["name"])
 
 
 class CADSource:
@@ -29,6 +32,39 @@ class CADSource:
         self.name = name
         self.path = path
         self.partinfo = [] if partinfo is None else partinfo
+        self._step = None
+
+    def add_partinfo(self, part_id, obj):
+        # create a PartInfo object with the specified part_id, and
+        # associate it with obj (which can be stored as a hidden
+        # attribute). This is usually done by using the
+        # PartInfo.from_part factory method.
+        #
+        # It is assumed that part_id and obj are obtained from
+        # invoking parts()
+        pass
+
+    def parts(self):
+        # returns a list of parts in the CAD model as list of (part_id, object)
+        # where object corresponds to the shape in the OCCT library
+        parts = []
+        if not self._step:
+            return parts
+        else:
+            cq = self._step.to_cadquery()
+            for obj, _ in cq:
+                parts.append((obj, obj)) # assuming partid = names
+            return parts
+
+
+    @classmethod
+    def load_step_file(cls, name: str, path: Path):
+        # should load the STEP file and return a CADSource object
+        # the loaded file can be a hidden attribute on CADSource
+        cs = cls(name=name, path=path)
+        sr = stepreader.StepReader()
+        cs._step = sr.load(str(path.as_posix()))
+        return cs    
 
     def to_dict(self, root=None):     
         path = PurePath(self.path)
@@ -54,11 +90,20 @@ class CADSource:
         else:
             path = PurePath(self["path"])
 
-        cs = CADSource(name=self["name"], path=path, partinfo=self["partinfo"])
+        partinfo = self.get("partinfo", [])
+        cs = CADSource(name=self["name"], path=path, partinfo=partinfo)
         return cs
 
 class TaskInfo:
     """Base class for all part-specific task information"""
+
+    @classmethod
+    def gettype(cls, type_name):
+        """Return one of the subtypes given by the name"""
+        for t in cls.__subclasses__():
+            if t.__name__ == type_name:
+                return t
+        raise TypeError(f"{type_name} is not a valid TaskInfo type")
 
 
 class STLConversionInfo(TaskInfo):
@@ -66,12 +111,26 @@ class STLConversionInfo(TaskInfo):
     linearTolerance: float
     angularTolerance: float
 
+    def __init__(self, rotation: None, linearTolerance: float, angularTolerance: float):
+        self.rotation = rotation
+        self.linearTolerance = linearTolerance
+        self.angularTolerance = angularTolerance
+
+    def to_dict(self):
+        return {
+            "type": "STLConversionInfo",
+            "rotation": self.rotation,
+            "linearTolerance": self.linearTolerance,
+            "angularTolerance": self.angularTolerance,
+        }
+
     @classmethod
     def from_dict(cls, si_info):
-        x = STLConversionInfo()
-        x.rotation = si_info.get("rotation")
-        x.linearTolerance = si_info.get("linearTolerance")
-        x.angularTolerance = si_info.get("angularTolerance")
+        x = STLConversionInfo(
+            rotation=si_info.get("rotation"),
+            linearTolerance=si_info.get("linearTolerance"),
+            angularTolerance=si_info.get("angularTolerance"),
+        )
         return x
 
 
@@ -125,8 +184,24 @@ class PartInfo:
     """Container for all part-specific task information"""
 
     def __init__(self, part_id: str = "", info: list = None):
-        self.part_id = ""
+        self.part_id = part_id
         self.info = [] if info is None else info
+
+    def add_info(self, info: TaskInfo):
+        # adds the provided info to the self.info list
+        pass
+
+    def export_to_stl(self, stl_output: Path):
+        # search partinfo for STLConversionInfo, if found
+        # apply the STLConversionInfo transformations to the part
+        # if not found, simply export the part to the stl_output specified.
+        pass
+
+    @classmethod
+    def from_part(cls, part_id: str, part):
+        # create and return a PartInfo object
+        # with the specified part_id and encapsulating the provided part object.
+        pass
 
     @classmethod
     def from_dict(cls, dict):
@@ -136,15 +211,16 @@ class PartInfo:
         part_id = dict["part_id"]
         info: [STLConversionInfo] = []
 
-        info_dict_list = dict["info"]
+        info_dict_list: [TaskInfo] = dict["info"]
         for info_dict in info_dict_list:
-            info.append(STLConversionInfo.from_dict(info_dict))
+            info_type: type[TaskInfo] = TaskInfo.gettype(info_dict["type"])
+            info.append(info_type.from_dict(info_dict))
 
-        x = cls()
-        x.part_id = part_id
-        x.info = info
-
-        return x
+        return cls(part_id, info)
 
     def to_dict(self):
-        return {"part_id": self.part_id, "info": [obj.to_dict() for obj in self.info]}
+        return {
+            "type": "PartInfo",
+            "part_id": self.part_id,
+            "info": [obj.to_dict() for obj in self.info],
+        }

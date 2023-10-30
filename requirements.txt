@@ -1,0 +1,4 @@
+# jupyter-cadquery dependencies
+cachetools
+numpy-quaternion
+webcolors
