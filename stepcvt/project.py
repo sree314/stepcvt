@@ -6,7 +6,7 @@
 # specific task. Right now, only the STLConversionTask is specified.
 
 from pathlib import Path, PurePath
-from jupyter_cadquery import stepreader
+from stepcvt import stepreader
 
 class Project:
     def __init__(self, name: str = "", sources: list = None):
@@ -28,7 +28,6 @@ class CADSource:
     def __init__(self, name: str = "", path: Path = None, partinfo: list = None):
         # human-readable name, for use in the UI for this source file
         # e.g. Rapido Hotend
-
         self.name = name
         self.path = path
         self.partinfo = [] if partinfo is None else partinfo
@@ -44,17 +43,18 @@ class CADSource:
         # invoking parts()
         pass
 
-    def parts(self):
+    def parts(assemblies): # we should pass in self._step.assemblies, which is a list object
         # returns a list of parts in the CAD model as list of (part_id, object)
         # where object corresponds to the shape in the OCCT library
-        parts = []
-        if not self._step:
-            return parts
-        else:
-            cq = self._step.to_cadquery()
-            for obj, _ in cq:
-                parts.append((obj, obj)) # assuming partid = names
-            return parts
+        result = []
+        for obj in assemblies:
+            # If the current object has a shape, append it to the results
+            if obj['shape'] is not None:
+                result.append((obj['name'], obj['shape']))
+            # If the current object doesn't have a shape, recursively go into its 'shapes' list
+            elif obj['shapes'] is not None:
+                result.extend(parts(obj['shapes']))
+        return result
 
 
     @classmethod
