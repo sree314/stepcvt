@@ -1,3 +1,7 @@
+import json
+import ast
+import functools
+
 class UserChoices:
     """Records a user's choices as a key--value store, where the keys
     are choice variables and value represents the current value of the variable.
@@ -14,7 +18,8 @@ class UserChoices:
 
     """
 
-    pass
+    def __init__(self, key_vals):
+        self.choices = key_vals
 
 
 class ChoiceExpr:
@@ -28,13 +33,38 @@ class ChoiceExpr:
     ## which could then be evaluated using literal_eval or something
     ## like that.
 
+    def __init__(self, expr)
+        self.expr = expr
+
+    @staticmethod
+    def extract_ast_vars(node: ast.AST) -> [str]:
+        """Recursively finds all variables in the given AST
+        Currently only supports boolean expressions
+        """
+        if isinstance(node, ast.Expression):
+            return extract_ast_vars(node.body)
+        elif isinstance(node, ast.BoolOp):
+            return reduce(+, map(extract_ast_vars, node.values))
+        elif isinstance(node, ast.Compare):
+            return extract_ast_vars(node.left) 
+                    + reduce(+, map(extract_ast_vars, node.comparators))
+        elif isinstance(node, ast.Name):
+            return [node.id]
+        elif isinstance(node, ast.Constants):
+            return []
+
     def eval(self, choices: UserChoices):
-        """Evaluates the condition based on the choices"""
-        pass
+        # extract dict items into assignment 
+        # as scope context for evaluating expr
+        scope = ""
+        for (key, value) in choices.choices.items():
+            scope.append(f'{key} = {value}\n')
+        scope.append(self.expr)
+        return eval(scope) # WARNING: huge security risk 
 
     def vars(self):
         """Returns the variables in the expression"""
-        pass
+        return extract_ast_vars(ast.parse(self.expr, mode='eval'))
 
 
 class ChoiceEffect:
