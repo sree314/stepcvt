@@ -1,6 +1,6 @@
-import json
 import ast
-import functools
+from functools import reduce
+
 
 class UserChoices:
     """Records a user's choices as a key--value store, where the keys
@@ -33,7 +33,7 @@ class ChoiceExpr:
     ## which could then be evaluated using literal_eval or something
     ## like that.
 
-    def __init__(self, expr)
+    def __init__(self, expr):
         self.expr = expr
 
     @staticmethod
@@ -42,29 +42,69 @@ class ChoiceExpr:
         Currently only supports boolean expressions
         """
         if isinstance(node, ast.Expression):
-            return extract_ast_vars(node.body)
+            return ChoiceExpr.extract_ast_vars(node.body)
         elif isinstance(node, ast.BoolOp):
-            return reduce(+, map(extract_ast_vars, node.values))
+            return reduce(
+                lambda l1, l2: l1 + l2,
+                map(ChoiceExpr.extract_ast_vars, node.values),
+                [],
+            )
         elif isinstance(node, ast.Compare):
-            return extract_ast_vars(node.left) 
-                    + reduce(+, map(extract_ast_vars, node.comparators))
+            return ChoiceExpr.extract_ast_vars(node.left) + reduce(
+                lambda l1, l2: l1 + l2,
+                map(ChoiceExpr.extract_ast_vars, node.comparators),
+                [],
+            )
         elif isinstance(node, ast.Name):
             return [node.id]
-        elif isinstance(node, ast.Constants):
+        elif isinstance(node, ast.Constant):
             return []
+        else:
+            raise AttributeError("unexpected ast construct " + node)
+
+    @staticmethod
+    def sanitize_ast(node: ast.AST):
+        """AST must only contains expressions,
+        raise error on potentially unsafe statement and lambda expr"""
+        # Only allows explicit expression construct
+        # https://docs.python.org/3/library/ast.html#expressions
+        if isinstance(node, ast.Expression):
+            ChoiceExpr.sanitize_ast(node.body)
+        elif isinstance(node, ast.BoolOp):
+            map(ChoiceExpr.sanitize_ast, node.values)
+        elif isinstance(node, ast.Compare):
+            ChoiceExpr.sanitize_ast(node.left)
+            map(ChoiceExpr.sanitize_ast, node.comparators)
+        elif isinstance(node, ast.UnaryOp):
+            ChoiceExpr.sanitize_ast(node.operand)
+        elif isinstance(node, ast.BinOp):
+            ChoiceExpr.sanitize_ast(node.left)
+            ChoiceExpr.sanitize_ast(node.right)
+        elif isinstance(node, ast.IfExp):
+            ChoiceEffect.sanitize_ast(node.test)
+            ChoiceEffect.sanitize_ast(node.body)
+            ChoiceEffect.sanitize_ast(node.orelse)
+        elif type(node) in {ast.Name, ast.Constant}:
+            return
+        else:
+            raise AttributeError(f"Unsupported expression type: {node}")
 
     def eval(self, choices: UserChoices):
-        # extract dict items into assignment 
+        # sanitize expression string
+        ChoiceExpr.sanitize_ast(ast.parse(self.expr, mode="eval"))
+        # extract dict items into assignment
         # as scope context for evaluating expr
-        scope = ""
-        for (key, value) in choices.choices.items():
-            scope.append(f'{key} = {value}\n')
-        scope.append(self.expr)
-        return eval(scope) # WARNING: huge security risk 
+        scope = "(lambda "
+        for key, value in choices.choices.items():
+            if isinstance(value, str):
+                value = f"'{value}'"
+            scope += f"{key} = {value}, "
+        scope = scope[0:-2] + f": {self.expr})()"
+        return eval(scope)  # WARNING: huge security risk
 
     def vars(self):
         """Returns the variables in the expression"""
-        return extract_ast_vars(ast.parse(self.expr, mode='eval'))
+        return ChoiceExpr.extract_ast_vars(ast.parse(self.expr, mode="eval"))
 
 
 class ChoiceEffect:
