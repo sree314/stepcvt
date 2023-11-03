@@ -5,14 +5,15 @@ import models
 
 # python -m pytest -k "test_cadsource.py"
 
+
 def test_CADSource_to_dict():
     x = CADSource(name="Rapido Hotend", path=Path("xyz.step"))
     d = x.to_dict()
     assert isinstance(d, dict)
     assert d["type"] == "CADSource"
     assert d["name"] == x.name
-    assert d["path"] == "xyz.step"  
-    
+    assert d["path"] == "xyz.step"
+
     # note: this is not a path, but a string
 
     # to_dict() should not return absolute paths
@@ -27,7 +28,7 @@ def test_CADSource_to_dict():
 
 def test_CADSource_to_dict_absolute():
     x = CADSource(name="Rapido Hotend", path=Path("C:/tmp/abc/xyz.step"))
-    # In Linux, /tmp/abc/xyz.step would be an absolute path, 
+    # In Linux, /tmp/abc/xyz.step would be an absolute path,
     # but on Windows, an absolute path would look like C:\tmp\abc\xyz.step
 
     # note the provision of the optional root path so that to_dict()
@@ -43,7 +44,7 @@ def test_CADSource_to_dict_absolute():
 
 
 def test_CADSource_to_dict_absolute_error():
-    x = CADSource(name="Rapido Hotend", path=Path("C:/tmp/abc/xyz.step")) 
+    x = CADSource(name="Rapido Hotend", path=Path("C:/tmp/abc/xyz.step"))
     # should raise error when path is absolute, but to_dict is not
     # provided the optional root parameter
 
@@ -56,7 +57,7 @@ def test_CADSource_from_dict_windows():
 
     # from_dict for cadsource should take a required root parameter in
     # addition to the dictionary
-    cs = CADSource.from_dict(d, Path("C:/tmp"))
+    cs = CADSource.from_dict(d, PurePath("C:/tmp"))
     assert isinstance(cs, CADSource)
     assert cs.name == d["name"]
     assert isinstance(cs.path, PurePath)
@@ -64,7 +65,20 @@ def test_CADSource_from_dict_windows():
     # the root parameter should be combined with the path stored in
     # the dictionary and converted into an absolute path when processing
     assert cs.path.is_absolute()
-    assert str(cs.path.as_posix()) == "C:/tmp/abc/xyz.step" # modified to accomodate windows path
+    assert (
+        str(cs.path.as_posix()) == "C:/tmp/abc/xyz.step"
+    )  # modified to accomodate windows path
+
+
+def test_CADSource_from_dict_unix():
+    d = {"type": "CADSource", "name": "Rapido", "path": "abc/xyz.step"}
+    cs = CADSource.from_dict(d, PurePath("/tmp"))
+    assert isinstance(cs, CADSource)
+    assert cs.name == d["name"]
+    assert isinstance(cs.path, PurePath)
+    print("debug path:", cs.path)
+    assert cs.path.is_absolute()
+    assert str(cs.path) == "/tmp/abc/xyz.step"
 
 
 # to_dict with part information
