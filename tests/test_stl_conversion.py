@@ -43,7 +43,7 @@ def test_STLConverstionInfo_rotate():
     )
 
     # rotate part
-    rotated = stlcvt.rotate(part)
+    rotated = stlcvt.rotate(part.toCompound())
 
     assert isinstance(rotated, Assembly)
     # rotated angle is the same as the sltcvt rotation param
