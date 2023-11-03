@@ -31,8 +31,9 @@ def test_STLConversionInfo_from_dict():
 
 def test_STLConverstionInfo_rotate():
     model = MODELS.get("book")
+    assembly_model = model()
     # traverse model to get a part
-    for o, oo in model.traverse():
+    for o, oo in assembly_model.traverse():
         if o == "book_body":
             part = oo
 
