@@ -35,21 +35,17 @@ if __name__ == "__main__":
         "output_directory",
         help="Output directory where step files will be placed (e.g. /tmp)",
     )
+    p.add_argument("--partid", action="append", help="Specify part to be exported")
     p.add_argument(
-        "--partid", 
-        action="append",
-        help="Specify part to be exported"
-    )
-    p.add_argument(
-        "--rot", 
+        "--rot",
         action="append",
         help="Apply custom rotation to the specified part ('x,y,z' in degrees,"
-            " only support integers)"
+        " only support integers)",
     )
     p.add_argument(
         "--exclude",
         nargs="+",
-        help="Export all objects except those specified here with partid"
+        help="Export all objects except those specified here with partid",
     )
 
     args = p.parse_args()
@@ -59,7 +55,7 @@ if __name__ == "__main__":
     specified_ids = args.partid
     specified_rot = args.rot
     exclude_ids = args.exclude
-    
+
     # create a project and load the step file
     p = Project(name=stepfile.name)
     p.add_source(name=stepfile.name, path=stepfile)
@@ -67,14 +63,14 @@ if __name__ == "__main__":
     # go through all parts in the step file and create partinfo for
     # them
     source = p.sources[0]
-        
+
     if exclude_ids != None:
         exclude_ids = set(exclude_ids)
         for partid, obj in source.parts():
             if partid not in exclude_ids:
                 source.add_partinfo(partid, obj)
     # export all parts, i.e. no partid and exclude specified
-    elif specified_ids is None: 
+    elif specified_ids is None:
         for partid, obj in source.parts():
             source.add_partinfo(partid, obj)
     else:
@@ -82,10 +78,10 @@ if __name__ == "__main__":
         for id, rot in zip(specified_ids, specified_rot):
             pattern = r"(?P<x>\d+),(?P<y>\d+),(?P<z>\d+)"
             m = re.match(pattern, rot)
-            dict_id_rot.__setitem__(id, [int(m.group('x')),
-                                        int(m.group('y')),
-                                        int(m.group('z'))])
-        
+            dict_id_rot.__setitem__(
+                id, [int(m.group("x")), int(m.group("y")), int(m.group("z"))]
+            )
+
         specified_ids = set(specified_ids)
         for partid, obj in source.parts():
             if partid in specified_ids:
@@ -97,11 +93,11 @@ if __name__ == "__main__":
             pi.add_info(
                 stepcvt.project.STLConversionInfo(
                     rotation=dict_id_rot[pi.part_id],
-                    linearTolerance=0.1, 
-                    angularTolerance=0.2
+                    linearTolerance=0.1,
+                    angularTolerance=0.2,
                 )
             )
-    
+
     # go through each added partinfo and add some STLConversionInfo
     # with some arbitrary rotation for now
     else:
