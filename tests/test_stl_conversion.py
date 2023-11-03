@@ -1,4 +1,4 @@
-from cadquery import Assembly
+from cadquery import Compound
 from stepcvt.project import STLConversionInfo
 from models import MODELS
 
@@ -45,6 +45,6 @@ def test_STLConverstionInfo_rotate():
     # rotate part
     rotated = stlcvt.rotate(part.toCompound())
 
-    assert isinstance(rotated, Assembly)
+    assert isinstance(rotated, Compound)
     # rotated angle is the same as the sltcvt rotation param
-    assert rotated.loc.toTuple()[1] == stlcvt.rotation
+    assert rotated.location().toTuple()[1] == stlcvt.rotation
