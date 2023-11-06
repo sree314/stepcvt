@@ -8,6 +8,7 @@
 from pathlib import Path, PurePath
 from stepcvt import stepreader
 
+
 class Project:
     def __init__(self, name: str = "", sources: list = None):
         self.name = name
@@ -43,19 +44,20 @@ class CADSource:
         # invoking parts()
         pass
 
-    def parts(assemblies): # we should pass in self._step.assemblies, which is a list object
+    def parts(
+        assemblies,
+    ):  # we should pass in self._step.assemblies, which is a list object
         # returns a list of parts in the CAD model as list of (part_id, object)
         # where object corresponds to the shape in the OCCT library
         result = []
         for obj in assemblies:
             # If the current object has a shape, append it to the results
-            if obj['shape'] is not None:
-                result.append((obj['name'], obj['shape']))
+            if obj["shape"] is not None:
+                result.append((obj["name"], obj["shape"]))
             # If the current object doesn't have a shape, recursively go into its 'shapes' list
-            elif obj['shapes'] is not None:
-                result.extend(parts(obj['shapes']))
+            elif obj["shapes"] is not None:
+                result.extend(parts(obj["shapes"]))
         return result
-
 
     @classmethod
     def load_step_file(cls, name: str, path: Path):
@@ -64,9 +66,9 @@ class CADSource:
         cs = cls(name=name, path=path)
         sr = stepreader.StepReader()
         cs._step = sr.load(str(path.as_posix()))
-        return cs    
+        return cs
 
-    def to_dict(self, root=None):     
+    def to_dict(self, root=None):
         path = PurePath(self.path)
         drive = path.drive
 
@@ -78,13 +80,14 @@ class CADSource:
             else:
                 path = path.relative_to(root)
 
-        return {"type": "CADSource",
-                "name": self.name,
-                "path": str(path.as_posix()),
-                "partinfo": self.partinfo
-                }
-    
-    def from_dict(self, root=None):       
+        return {
+            "type": "CADSource",
+            "name": self.name,
+            "path": str(path.as_posix()),
+            "partinfo": self.partinfo,
+        }
+
+    def from_dict(self, root=None):
         if root:
             path = PurePath(root / self["path"])
         else:
@@ -93,6 +96,7 @@ class CADSource:
         partinfo = self.get("partinfo", [])
         cs = CADSource(name=self["name"], path=path, partinfo=partinfo)
         return cs
+
 
 class TaskInfo:
     """Base class for all part-specific task information"""
