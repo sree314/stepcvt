@@ -1,4 +1,6 @@
 from stepcvt.choices import *
+from stepcvt.project import PartInfo, Project
+import math
 
 
 project_available_choices = Choices(
@@ -17,19 +19,50 @@ project_available_choices = Choices(
 )
 
 user_choices = UserChoices(
-    {"NevermoreModel": "V6", "PrinterOptions": {"Filter", "Lights"}}
+    {"NevermoreModel": "V4", "PrinterOptions": {"Filter", "Lights"}}
 )
 
-choice_expr_v6 = ChoiceExpr("NevermoreModel == 'V6' and 'Filter' in PrinterOptions")
-choice_expr_v4 = ChoiceExpr("NevermoreModel == 'V4'")
+project = Project("Nevermore", available_choices=project_available_choices)
+project.accept_user_choices(user_choices)
+
+partinfo = PartInfo("LightsMount", default_selected=False, count=0)
+partinfo.root_project = project  # This would be set in a more systematic way
 
 
 def test_choice_expr():
+    choice_expr_v6 = ChoiceExpr("NevermoreModel == 'V6' and 'Filter' in PrinterOptions")
+    choice_expr_v4 = ChoiceExpr("NevermoreModel == 'V4'")
     assert set(choice_expr_v6.vars()) == {"NevermoreModel", "PrinterOptions"}
     assert choice_expr_v4.vars() == ["NevermoreModel"]
-    assert choice_expr_v6.eval(user_choices)
-    assert not choice_expr_v4.eval(user_choices)
+    assert not choice_expr_v6.eval(user_choices)
+    assert choice_expr_v4.eval(user_choices)
 
 
 def test_selection_effect():
-    pass
+    partinfo.choice_effects.append(
+        SelectionEffect(ChoiceExpr("'Lights' in PrinterOptions"))
+    )
+    assert partinfo.selected
+
+
+def test_relative_count_effect():
+    partinfo.choice_effects.append(
+        RelativeCountEffect(ChoiceExpr("'Lights' in PrinterOptions"), 2)
+    )
+    partinfo.choice_effects.append(
+        RelativeCountEffect(ChoiceExpr("'Filter' in PrinterOptions"), 1)
+    )
+    assert partinfo.count == 3
+
+    partinfo.choice_effects.append(
+        AbsoluteCountEffect(ChoiceExpr("NevermoreModel == 'V4'"), 2)
+    )
+    assert partinfo.count == 2
+
+
+def test_scale_effect():
+    assert math.isclose(partinfo.scale, 1.0)
+    partinfo.choice_effects.append(
+        ScaleEffect(ChoiceExpr("NevermoreModel == 'V4'"), 1.2)
+    )
+    assert math.isclose(partinfo.scale, 1.2)

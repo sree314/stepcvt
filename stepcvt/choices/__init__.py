@@ -131,7 +131,9 @@ class RelativeCountEffect(ChoiceEffect):
 
     """
 
-    pass
+    def __init__(self, cond: ChoiceExpr, count_delta, *args, **kwargs):
+        self.count_delta = count_delta
+        super().__init__(cond, *args, **kwargs)
 
 
 class AbsoluteCountEffect(ChoiceEffect):
@@ -140,7 +142,9 @@ class AbsoluteCountEffect(ChoiceEffect):
 
     """
 
-    pass
+    def __init__(self, cond: ChoiceExpr, count, *args, **kwargs):
+        self.count = count
+        super().__init__(cond, *args, **kwargs)
 
 
 class ScaleEffect(ChoiceEffect):
@@ -150,7 +154,9 @@ class ScaleEffect(ChoiceEffect):
     the printer.
     """
 
-    pass
+    def __init__(self, cond: ChoiceExpr, scale, *args, **kwargs):
+        self.scale = scale
+        super().__init__(cond, *args, **kwargs)
 
 
 class Chooser:

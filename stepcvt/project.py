@@ -8,12 +8,22 @@
 from pathlib import Path, PurePath
 from stepcvt import stepreader
 import cadquery as cq
+from stepcvt import choices
 
 
 class Project:
-    def __init__(self, name: str = "", sources: list = None):
+    def __init__(
+        self,
+        name: str = "",
+        sources: list = None,
+        available_choices: choices.Choices = None,
+    ):
         self.name = name
         self.sources = [] if sources is None else sources
+        self.available_choices = (
+            available_choices if available_choices is not None else choices.Choices([])
+        )
+        self.user_choices = choices.UserChoices(dict())
 
     def to_dict(self, root=None):
         return {"type": "Project", "name": self.name}
@@ -23,6 +33,12 @@ class Project:
             if cs.name == name or cs.path == path:
                 return
         self.sources.append(CADSource.load_step_file(name, path))
+
+    def accept_user_choices(self, choices: choices.UserChoices):
+        # TODO: validate user choices is subset of available choices
+        self.user_choices = choices
+        # TODO: maintain reference to every partinfo, and calculates their properties for them only once when accepting a user choice
+        # saves repeated computation, and a reference from partinfo to project is not necessary
 
     @classmethod
     def from_dict(cls, d):
@@ -204,10 +220,24 @@ class TextInfo(TaskInfo):
 class PartInfo:
     """Container for all part-specific task information"""
 
-    def __init__(self, part_id: str = "", info: list = None, part: cq.Assembly = None):
+    def __init__(
+        self,
+        part_id: str = "",
+        info: list = None,
+        part: cq.Assembly = None,
+        default_selected=False,
+        count=1,
+        scale=1.0,
+    ):
         self.part_id = part_id
         self.info = [] if info is None else info
         self._cad: cq.Assembly = part
+        self._selected = default_selected
+        self._default_count = count
+        self._default_scale = scale
+        self.choice_effects: [choices.ChoiceEffect] = []
+        # TODO: need to decide when this is set
+        self.root_project: Project = None
 
     def add_info(self, info: TaskInfo):
         """adds the provided info to the self.info list"""
@@ -262,3 +292,40 @@ class PartInfo:
             "part_id": self.part_id,
             "info": [obj.to_dict() for obj in self.info],
         }
+
+    # TODO: optimize so we don't iterate every time the properties are accessed
+    # maybe update value when a new user choice is set?
+    @property
+    def count(self):
+        count = self._default_count
+        for effect in filter(
+            lambda e: e.cond.eval(self.root_project.user_choices), self.choice_effects
+        ):
+            if isinstance(effect, choices.RelativeCountEffect):
+                count += effect.count_delta
+            elif isinstance(effect, choices.AbsoluteCountEffect):
+                return effect.count
+        return count
+
+    @property
+    def selected(self):
+        return (
+            True
+            if self._selected
+            else any(
+                e.cond.eval(self.root_project.user_choices)
+                for e in self.choice_effects
+                if isinstance(e, choices.SelectionEffect)
+            )
+        )
+
+    @property
+    def scale(self):
+        return next(
+            filter(
+                lambda e: isinstance(e, choices.ScaleEffect)
+                and e.cond.eval(self.root_project.user_choices),
+                self.choice_effects,
+            ),
+            choices.ScaleEffect(None, self._default_scale),
+        ).scale
