@@ -20,12 +20,13 @@ class Project:
     def add_source(self, name: str, path: Path):
         for cs in self.sources:
             if cs.name == name or cs.path == path:
-                return
+                raise KeyError("Cannot add source that already exists")
         self.sources.append(CADSource.load_step_file(name, path))
 
     @classmethod
     def from_dict(cls, d):
-        return Project(d["name"])
+        Project(d["name"])
+        cls.sources = [] if d["sources"] is None else d["sources"]
 
 
 class CADSource:
