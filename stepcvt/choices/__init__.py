@@ -1,5 +1,6 @@
 import ast
 from functools import reduce
+from typing import Dict
 
 
 class UserChoices:
@@ -18,7 +19,7 @@ class UserChoices:
 
     """
 
-    def __init__(self, key_vals):
+    def __init__(self, key_vals: dict):
         self.choices = key_vals
 
 
@@ -89,13 +90,14 @@ class ChoiceExpr:
         else:
             raise AttributeError(f"Unsupported expression type: {node}")
 
-    def eval(self, choices: UserChoices):
+    def eval(self, user_choices: UserChoices):
         # sanitize expression string
         ChoiceExpr.sanitize_ast(ast.parse(self.expr, mode="eval"))
         # extract dict items into assignment
         # as scope context for evaluating expr
         scope = "(lambda "
-        for key, value in choices.choices.items():
+        print(user_choices.choices)
+        for key, value in user_choices.choices.items():
             if isinstance(value, str):
                 value = f"'{value}'"
             scope += f"{key} = {value}, "
@@ -163,7 +165,9 @@ class Chooser:
     """Base class for a choice. This also corresponds to the UI shown for
     a choice"""
 
-    pass
+    def __init__(self, text: str, varname: str) -> None:
+        self.text = text  # human-readable text
+        self.varname = varname  # variable name
 
 
 class ChoiceValue:
@@ -188,9 +192,8 @@ class SingleChooser(Chooser):
     """
 
     def __init__(self, text: str, varname: str, values: [ChoiceValue]):
-        self.text = text  # human-readable text
-        self.varname = varname  # variable name
         self.values = values
+        super().__init__(text, varname)
 
 
 class MultiChooser(Chooser):
@@ -201,9 +204,8 @@ class MultiChooser(Chooser):
     """
 
     def __init__(self, text: str, varname: str, values: [ChoiceValue]):
-        self.text = text
-        self.varname = varname
         self.values = values
+        super().__init__(text, varname)
 
 
 class BooleanChoice(Chooser):
@@ -216,10 +218,9 @@ class BooleanChoice(Chooser):
         sel_value: ChoiceValue,  # value when selected
         unsel_value: ChoiceValue = None,
     ):  # value when not selected
-        self.text = text
-        self.varname = varname
         self.sel_value = sel_value
         self.unsel_value = unsel_value
+        super().__init__(text, varname)
 
 
 class Choices:
@@ -227,6 +228,18 @@ class Choices:
 
     def __init__(self, choices: [Chooser]):
         self.choices = choices
+
+    def to_dict(self) -> Dict[str, set]:
+        """Serialize available choices as dict,
+        list is converted to set for better membership testing"""
+        d = dict()
+        for chooser in self.toposort():
+            d[chooser.varname] = (
+                {chooser.sel_value.value, chooser.unsel_value.value}
+                if type(chooser) is BooleanChoice
+                else set(ch_v.value for ch_v in chooser.values)
+            )
+        return d
 
     def toposort(self):
         # returns a topological ordering of choices
@@ -236,4 +249,5 @@ class Choices:
         # each level of choices depends on choices made in the previous levels
 
         # circular dependencies are prohibited
-        pass
+        # TODO: make this real toposort
+        return self.choices

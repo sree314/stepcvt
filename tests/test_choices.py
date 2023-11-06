@@ -1,6 +1,7 @@
 from stepcvt.choices import *
 from stepcvt.project import PartInfo, Project
 import math
+import pytest
 
 
 project_available_choices = Choices(
@@ -13,7 +14,15 @@ project_available_choices = Choices(
         MultiChooser(
             "Optional Printer Features",
             "PrinterOptions",
-            [ChoiceValue("HEPA Filter", "Filter"), ChoiceValue("Lights", "Lights")],
+            [
+                ChoiceValue("HEPA Filter", "Filter"),
+                ChoiceValue("Lights", "Lights"),
+                ChoiceValue(
+                    "Lights controller",
+                    "LightsCtrl",
+                    ChoiceExpr("'Lights' in PrinterOptions"),
+                ),
+            ],
         ),
     ]
 )
@@ -66,3 +75,19 @@ def test_scale_effect():
         ScaleEffect(ChoiceExpr("NevermoreModel == 'V4'"), 1.2)
     )
     assert math.isclose(partinfo.scale, 1.2)
+
+
+def test_invalid_user_choice():
+    # potentially better error messages?
+    with pytest.raises(
+        AttributeError, match="Unidentified options '.*' in 'PrinterOptions'"
+    ):
+        invalid_choices = UserChoices(
+            {"PrinterOptions": {"HEPA Filter", "Infrared Lights"}}
+        )
+        project.accept_user_choices(invalid_choices)
+    with pytest.raises(
+        AttributeError, match="Precondition for 'LightsCtrl' not satisfied"
+    ):
+        invalid_pre_cond = UserChoices({"PrinterOptions": {"LightsCtrl"}})
+        project.accept_user_choices(invalid_pre_cond)

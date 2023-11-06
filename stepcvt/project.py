@@ -34,9 +34,44 @@ class Project:
                 return
         self.sources.append(CADSource.load_step_file(name, path))
 
-    def accept_user_choices(self, choices: choices.UserChoices):
-        # TODO: validate user choices is subset of available choices
-        self.user_choices = choices
+    def accept_user_choices(self, user_choices: choices.UserChoices):
+        # validate user choices
+        avail_choices_dict = self.available_choices.to_dict()
+        valid_user_choices = choices.UserChoices(dict())
+        for key, val in user_choices.choices.items():
+            # test valid option
+            if key not in avail_choices_dict:
+                raise AttributeError(f"Unidentified option key '{key}'")
+            val_set = set(val) if type(val) is list or type(val) is set else {val}
+            if not val_set <= avail_choices_dict[key]:
+                raise AttributeError(f"Unidentified options '{val}' in '{key}'")
+
+            # test valid precondition
+            valid_user_choices.choices[key] = val
+            # get the chooser we just corresponding to the new user choice key val pair
+            chooser = next(
+                filter(
+                    lambda ch, key=key: ch.varname == key,
+                    self.available_choices.choices,
+                )
+            )
+            # get the set of values that appeared in the user choice
+            values = (
+                {chooser.sel_value, chooser.unsel_value}
+                if type(chooser) is choices.BooleanChoice
+                else set(chooser.values)
+            )
+            values = filter(lambda v, val=val: v.value in val, values)
+            # test if all preconditions for values in such set are satisfied
+            for value in values:
+                print(value.value)
+                if value.cond is not None and not value.cond.eval(valid_user_choices):
+                    raise AttributeError(
+                        f"Precondition for '{value.value}' not satisfied"
+                    )
+
+        self.user_choices = user_choices
+
         # TODO: maintain reference to every partinfo, and calculates their properties for them only once when accepting a user choice
         # saves repeated computation, and a reference from partinfo to project is not necessary
 
