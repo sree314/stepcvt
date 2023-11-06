@@ -1,4 +1,6 @@
+from cadquery import Compound
 from stepcvt.project import STLConversionInfo
+from models import MODELS
 
 
 def test_STLConversionInfo_to_dict():
@@ -25,3 +27,24 @@ def test_STLConversionInfo_from_dict():
     assert si.rotation == [0, 0, 0]
     assert si.linearTolerance == 0.1
     assert si.angularTolerance == 0.1
+
+
+def test_STLConverstionInfo_rotate():
+    model = MODELS.get("book")
+    assembly_model = model()
+    # traverse model to get a part
+    for o, oo in assembly_model.traverse():
+        if o == "book_body":
+            part = oo
+
+    # init STLConverstionInfo object
+    stlcvt = STLConversionInfo(
+        rotation=[0, 90, 0], linearTolerance=0.1, angularTolerance=0.15
+    )
+
+    # rotate part
+    rotated = stlcvt.rotate(part.toCompound())
+
+    assert isinstance(rotated, Compound)
+    # rotated angle is the same as the sltcvt rotation param
+    assert rotated.location().toTuple()[1] == stlcvt.rotation
