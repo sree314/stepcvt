@@ -19,7 +19,7 @@ class Project:
 
     def add_source(self, name: str, path: Path):
         for cs in self.sources:
-            if cs.name == name or cs.path == Path:
+            if cs.name == name or cs.path == path:
                 return
         self.sources.append(CADSource.load_step_file(name, Path))
 
