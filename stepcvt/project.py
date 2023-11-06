@@ -10,7 +10,6 @@ from stepcvt import stepreader
 import cadquery as cq
 
 
-
 class Project:
     def __init__(self, name: str = "", sources: list = None):
         self.name = name
