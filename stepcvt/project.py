@@ -19,7 +19,10 @@ class Project:
         return {"type": "Project", "name": self.name}
 
     def add_source(self, name: str, path: Path):
-        pass
+        for cs in self.sources:
+            if cs.name == name or cs.path == path:
+                return
+        self.sources.append(CADSource.load_step_file(name, path))
 
     @classmethod
     def from_dict(cls, d):
