@@ -25,8 +25,10 @@ class Project:
 
     @classmethod
     def from_dict(cls, d):
-        Project(d["name"])
-        cls.sources = [] if d["sources"] is None else d["sources"]
+        if "sources" in d:
+            Project(d["name"], d["sources"])
+        else:
+            Project(d["name"])
 
 
 class CADSource:
