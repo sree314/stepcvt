@@ -46,11 +46,11 @@ File Tree for CLI:
 """
 
 import argparse
-from pathlib import Path
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-j", help="Path to an empty .json file or one with a saved project"
+    "-j", "--json", help="Path to an empty .json file or one with a saved project"
 )
 parser.add_argument("make", help="Make a new project")
 parser.add_argument("display", help="Display a project's data")
@@ -58,10 +58,16 @@ parser.add_argument("name", help="Change the name of a project")
 args = parser.parse_args()
 
 if args.j:
-    json = args.j
+    jsonFile = open(args.j)
+    jsonData = json.load(jsonFile)
+
 if args.make:
     make = args.make
+
 if args.display:
     disp = args.display
+
 if args.name:
     name = args.name
+
+jsonFile.close()
