@@ -6,7 +6,7 @@ Project CLI Overview:
 
 		<stepcvt> [-j] [json file path/name.json] <make> [specific project "name"]
 		<stepcvt> [-j] [json file path/name.json] <make>
-		<stepcvt> <make> [specific project "name"]
+		<stepcvt> <make> [-n] [specific project "name"]
 		<stepcvt> <make>
 
 	2. Display existing project from an existing json file
@@ -17,7 +17,7 @@ Project CLI Overview:
 		 - Try to use default file "stepcvt.json" if it exists.
 		 - If that fails, throw an error
 
-		<stepcvt> <display> [-j] [json file path/name.json]
+		<stepcvt> [-j] [json file path/name.json] <display>
 		<stepcvt> <display>
 
 	3. Edit name, etc. in a given json file (or default json file)
@@ -29,8 +29,8 @@ Project CLI Overview:
 		 - If that fails, throw an error
 	   - If no "name" given, throw an error
 
-		<stepcvt> [-j] [json file path/name.json] <name> [new "name"]
-		<stepcvt> <name> [new "name"]
+		<stepcvt> [-j] [json file path/name.json] <name> [-n] [new "name"]
+		<stepcvt> <name> [-n] [new "name"]
 
 
 
@@ -52,22 +52,32 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "-j", "--json", help="Path to an empty .json file or one with a saved project"
 )
-parser.add_argument("make", help="Make a new project")
-parser.add_argument("display", help="Display a project's data")
-parser.add_argument("name", help="Change the name of a project")
+parser.add_argument("command", help="Subcommand to run (make, display, name)")
+parser.add_argument("-n", "--newName", help="Optional subcommand input")
 args = parser.parse_args()
 
-if args.j:
-    jsonFile = open(args.j)
+if args.json:
+    jsonFile = open(args.j, "x")
+else:
+    jsonFile = open("stepcvt.json", "x")
+
+if args.newName:
+    n = args.newName
+else:
+    n = "stepcvt"
+
+if args.command == "make":
     jsonData = json.load(jsonFile)
+    Project.from_dict(n, jsonData)
 
-if args.make:
-    make = args.make
+elif args.command == "display":
+    print(json.load(jsonFile))
 
-if args.display:
-    disp = args.display
+elif args.command == "name":
+    Project.name = n
 
-if args.name:
-    name = args.name
+else:
+    print("ERROR")
+
 
 jsonFile.close()
