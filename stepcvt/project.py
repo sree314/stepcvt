@@ -203,10 +203,10 @@ class TextInfo(TaskInfo):
 
 class CountInfo(TaskInfo):
     """Class for storing count for the part"""
-    
+
     def __init__(self, count: int = 1):
         self.count = count
-    
+
     def to_dict(self):
         return {"type": "CountInfo", "count": self.count}
 

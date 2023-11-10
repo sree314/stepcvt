@@ -8,26 +8,26 @@ import argparse
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="")
     p.add_argument("-j", dest="jsonfile", type=str, help="Provide the jsonfile")
-    
+
     sp = p.add_subparsers(dest='command')
-    
+
     app = sp.add_parser("addpart", help="Add a part")
     # can be no id specified if --all is used
     app.add_argument("id", nargs="*", help="Specify partid for parts to be added")
-    app.add_argument("--all", 
-                     action="store_true", 
+    app.add_argument("--all",
+                     action="store_true",
                      help="Include this if you want to add all of the parts")
     app.set_defaults(func=part.add_part)
-    
+
     rpp = sp.add_parser("rmpart", help="Remove a part")
     rpp.add_argument("id", nargs="+", help="Specify partid for parts to be removed")
     rpp.set_defaults(func=part.remove_part)
-    
+
     epp = sp.add_parser("editpart", help="Change part properties")
     # can only change one part at a time
     epp.add_argument("id", help="Specify partid for the part to be edited")
     epp.add_argument("-c", "--count", type=int, help="Change the count of the part")
     epp.set_defaults(func=part.edit_part)
-    
+
     args = p.parse_args()
     sys.exit(args.func(args))
