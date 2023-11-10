@@ -201,6 +201,23 @@ class TextInfo(TaskInfo):
         return cls(text=d["text"])
 
 
+class CountInfo(TaskInfo):
+    """Class for storing count for the part"""
+    
+    def __init__(self, count: int = 1):
+        self.count = count
+    
+    def to_dict(self):
+        return {"type": "CountInfo", "count": self.count}
+
+    @classmethod
+    def from_dict(cls, d):
+        if d.get("type", None) != "CountInfo":
+            raise ValueError(f"Incorrect value for type, expected CountInfo")
+
+        return cls(count=d["count"])
+
+
 class PartInfo:
     """Container for all part-specific task information"""
 
