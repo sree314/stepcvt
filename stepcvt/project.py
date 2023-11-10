@@ -7,6 +7,8 @@
 
 from pathlib import Path, PurePath
 from stepcvt import stepreader
+import cadquery as cq
+
 
 
 class Project:
@@ -18,7 +20,10 @@ class Project:
         return {"type": "Project", "name": self.name}
 
     def add_source(self, name: str, path: Path):
-        pass
+        for cs in self.sources:
+            if cs.name == name or cs.path == path:
+                return
+        self.sources.append(CADSource.load_step_file(name, path))
 
     @classmethod
     def from_dict(cls, d):
@@ -48,7 +53,9 @@ class CADSource:
         return partinfo
 
     def parts(
+
         self, assemblies=None
+
     ):  # we should pass in self._step.assemblies, which is a list object
         # returns a list of parts in the CAD model as list of (part_id, object)
         # where object corresponds to the shape in the OCCT library
@@ -60,7 +67,9 @@ class CADSource:
                 result.append((obj["name"], obj["shape"]))
             # If the current object doesn't have a shape, recursively go into its 'shapes' list
             elif obj["shapes"] is not None:
+
                 result.extend(CADSource.parts(obj["shapes"]))
+
         return result
 
     @classmethod
@@ -69,7 +78,9 @@ class CADSource:
         # the loaded file can be a hidden attribute on CADSource
         cs = cls(name=name, path=path)
         sr = stepreader.StepReader()
+
         cs._CADSource__step = sr.load(str(path))
+
         return cs
 
     def to_dict(self, root=None):
@@ -141,6 +152,19 @@ class STLConversionInfo(TaskInfo):
         )
         return x
 
+    def rotate(self, part: cq.Assembly) -> cq.Assembly:
+        """returns a rotated Cadquery Assembly object"""
+        # rotate takes two vector to form a rotational axis, then applies the rotation degree to that axis
+        # so has to make own x, y, z axis
+        for i in range(3):
+            part = part.rotate(
+                (0, 0, 0),
+                # (1,0,0), (0,1,0), (0,0,1)
+                tuple(1 if n == i else 0 for n in range(3)),
+                self.rotation[i],
+            )
+        return part
+
 
 class SlicerSettingsInfo(TaskInfo):
     """Class for containing slicer-specific settings for the part,
@@ -191,25 +215,42 @@ class TextInfo(TaskInfo):
 class PartInfo:
     """Container for all part-specific task information"""
 
-    def __init__(self, part_id: str = "", info: list = None):
+    def __init__(self, part_id: str = "", info: list = None, part: cq.Assembly = None):
         self.part_id = part_id
         self.info = [] if info is None else info
+        self._cad: cq.Assembly = part
 
     def add_info(self, info: TaskInfo):
-        # adds the provided info to the self.info list
-        pass
+        """adds the provided info to the self.info list"""
+        self.info.append(info)
 
     def export_to_stl(self, stl_output: Path):
-        # search partinfo for STLConversionInfo, if found
-        # apply the STLConversionInfo transformations to the part
-        # if not found, simply export the part to the stl_output specified.
-        pass
+        """
+        search partinfo for STLConversionInfo, if found
+        apply the STLConversionInfo transformations to the part
+        if not found, simply export the part to the stl_output specified.
+        """
+        stlinfo = next(
+            (info for info in self.info if isinstance(info, STLConversionInfo)), None
+        )
+        assem = self._cad.toCompound()
+        if stlinfo is not None:
+            assem = stlinfo.rotate(assem)
+            cq.exporters.export(
+                assem,
+                stl_output,
+                tolerance=stlinfo.linearTolerance,
+                angularTolerance=stlinfo.angularTolerance,
+            )
+        cq.exporters.export(assem, stl_output)
 
     @classmethod
     def from_part(cls, part_id: str, part):
-        # create and return a PartInfo object
-        # with the specified part_id and encapsulating the provided part object.
-        pass
+        """
+        create and return a PartInfo object
+        with the specified part_id and encapsulating the provided part object.
+        """
+        return cls(part_id, part=part)
 
     @classmethod
     def from_dict(cls, dict):
