@@ -10,7 +10,6 @@ from stepcvt import stepreader
 import cadquery as cq
 
 
-
 class Project:
     def __init__(self, name: str = "", sources: list = None):
         self.name = name
@@ -52,24 +51,33 @@ class CADSource:
 
         return partinfo
 
-    def parts(
+    # def parts(self, assemblies=None):  # we should pass in self._step.assemblies, which is a list object
+    #     # returns a list of parts in the CAD model as list of (part_id, object)
+    #     # where object corresponds to the shape in the OCCT library
+    #     assemblies = self._CADSource__step.assemblies
+    #     result = []
+    #     for obj in assemblies:
+    #         # If the current object has a shape, append it to the results
+    #         if obj["shape"] is not None:
+    #             result.append((obj["name"], obj["shape"]))
+    #         # If the current object doesn't have a shape, recursively go into its 'shapes' list
+    #         elif obj["shapes"] is not None:
+    #             result.extend(CADSource.parts(obj["shapes"]))
 
-        self, assemblies=None
+    #     return result
 
-    ):  # we should pass in self._step.assemblies, which is a list object
-        # returns a list of parts in the CAD model as list of (part_id, object)
-        # where object corresponds to the shape in the OCCT library
-        assemblies = self._CADSource__step.assemblies
+    def parts(self, assemblies=None):
+        if assemblies is None:
+            assemblies = self._CADSource__step.assemblies
+        return self._recursive_parts(assemblies)
+
+    def _recursive_parts(self, assemblies):
         result = []
         for obj in assemblies:
-            # If the current object has a shape, append it to the results
             if obj["shape"] is not None:
                 result.append((obj["name"], obj["shape"]))
-            # If the current object doesn't have a shape, recursively go into its 'shapes' list
             elif obj["shapes"] is not None:
-
-                result.extend(CADSource.parts(obj["shapes"]))
-
+                result.extend(self._recursive_parts(obj["shapes"]))
         return result
 
     @classmethod
