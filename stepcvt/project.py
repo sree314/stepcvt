@@ -52,11 +52,7 @@ class CADSource:
 
         return partinfo
 
-    def parts(
-
-        self, assemblies=None
-
-    ):  # we should pass in self._step.assemblies, which is a list object
+    def parts(self, assemblies=None):  # we should pass in self._step.assemblies, which is a list object
         # returns a list of parts in the CAD model as list of (part_id, object)
         # where object corresponds to the shape in the OCCT library
         assemblies = self._CADSource__step.assemblies
@@ -67,7 +63,6 @@ class CADSource:
                 result.append((obj["name"], obj["shape"]))
             # If the current object doesn't have a shape, recursively go into its 'shapes' list
             elif obj["shapes"] is not None:
-
                 result.extend(CADSource.parts(obj["shapes"]))
 
         return result
