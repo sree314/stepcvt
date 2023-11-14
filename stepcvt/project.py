@@ -5,7 +5,8 @@
 # part. Each PartInfo contains a set of information, each for a
 # specific task. Right now, only the STLConversionTask is specified.
 
-from pathlib import Path
+from pathlib import Path, PurePath
+from stepcvt import stepreader
 import cadquery as cq
 
 
@@ -18,7 +19,10 @@ class Project:
         return {"type": "Project", "name": self.name}
 
     def add_source(self, name: str, path: Path):
-        pass
+        for cs in self.sources:
+            if cs.name == name or cs.path == path:
+                return
+        self.sources.append(CADSource.load_step_file(name, path))
 
     @classmethod
     def from_dict(cls, d):
@@ -29,10 +33,10 @@ class CADSource:
     def __init__(self, name: str = "", path: Path = None, partinfo: list = None):
         # human-readable name, for use in the UI for this source file
         # e.g. Rapido Hotend
-
         self.name = name
         self.path = path
         self.partinfo = [] if partinfo is None else partinfo
+        self._step = None
 
     def add_partinfo(self, part_id, obj):
         # create a PartInfo object with the specified part_id, and
@@ -44,19 +48,58 @@ class CADSource:
         # invoking parts()
         pass
 
-    def parts(self):
+    def parts(
+        assemblies,
+    ):  # we should pass in self._step.assemblies, which is a list object
         # returns a list of parts in the CAD model as list of (part_id, object)
         # where object corresponds to the shape in the OCCT library
-        pass
+        result = []
+        for obj in assemblies:
+            # If the current object has a shape, append it to the results
+            if obj["shape"] is not None:
+                result.append((obj["name"], obj["shape"]))
+            # If the current object doesn't have a shape, recursively go into its 'shapes' list
+            elif obj["shapes"] is not None:
+                result.extend(parts(obj["shapes"]))
+        return result
 
     @classmethod
     def load_step_file(cls, name: str, path: Path):
         # should load the STEP file and return a CADSource object
         # the loaded file can be a hidden attribute on CADSource
-        pass
+        cs = cls(name=name, path=path)
+        sr = stepreader.StepReader()
+        cs._step = sr.load(str(path.as_posix()))
+        return cs
 
-    def to_dict(self):
-        return {"type": "CADSource"}
+    def to_dict(self, root=None):
+        path = PurePath(self.path)
+        drive = path.drive
+
+        if path.is_absolute():
+            if not root:
+                raise AssertionError("Root must be provided for absolute paths!")
+            if drive:
+                path = path.relative_to(drive / root)
+            else:
+                path = path.relative_to(root)
+
+        return {
+            "type": "CADSource",
+            "name": self.name,
+            "path": str(path.as_posix()),
+            "partinfo": self.partinfo,
+        }
+
+    def from_dict(self, root=None):
+        if root:
+            path = PurePath(root / self["path"])
+        else:
+            path = PurePath(self["path"])
+
+        partinfo = self.get("partinfo", [])
+        cs = CADSource(name=self["name"], path=path, partinfo=partinfo)
+        return cs
 
 
 class TaskInfo:
@@ -156,6 +199,23 @@ class TextInfo(TaskInfo):
             raise ValueError(f"Incorrect value for type, expected TextInfo")
 
         return cls(text=d["text"])
+
+
+class CountInfo(TaskInfo):
+    """Class for storing count for the part"""
+
+    def __init__(self, count: int = 1):
+        self.count = count
+
+    def to_dict(self):
+        return {"type": "CountInfo", "count": self.count}
+
+    @classmethod
+    def from_dict(cls, d):
+        if d.get("type", None) != "CountInfo":
+            raise ValueError(f"Incorrect value for type, expected CountInfo")
+
+        return cls(count=d["count"])
 
 
 class PartInfo:
