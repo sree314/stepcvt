@@ -86,9 +86,9 @@ class CADSource:
         # the loaded file can be a hidden attribute on CADSource
         cs = cls(name=name, path=path)
         sr = stepreader.StepReader()
-
-        cs._CADSource__step = sr.load(str(path))
-
+        sr.load(str(path))
+        cs._CADSource__step = sr
+        print("changed version")
         return cs
 
     def to_dict(self, root=None):
