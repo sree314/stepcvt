@@ -46,6 +46,7 @@ class CADSource:
         #
         # It is assumed that part_id and obj are obtained from
         # invoking parts()
+        dict = {}
         dict = dict.fromkeys(part_id, obj)
         partinfo = PartInfo.from_dict(dict)
 
@@ -88,7 +89,6 @@ class CADSource:
         sr = stepreader.StepReader()
         sr.load(str(path))
         cs._CADSource__step = sr
-        print("changed version")
         return cs
 
     def to_dict(self, root=None):
