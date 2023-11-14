@@ -21,6 +21,7 @@ class Project:
     def add_source(self, name: str, path: Path):
         for cs in self.sources:
             if cs.name == name or cs.path == path:
+                raise KeyError("Duplicate cannot be added")
                 return
         self.sources.append(CADSource.load_step_file(name, path))
 
