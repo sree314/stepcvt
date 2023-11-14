@@ -26,9 +26,9 @@ class Project:
     @classmethod
     def from_dict(cls, d):
         if "sources" in d:
-            Project(d["name"], d["sources"])
+            cls(d["name"], d["sources"])
         else:
-            Project(d["name"])
+            cls(d["name"])
 
 
 class CADSource:
