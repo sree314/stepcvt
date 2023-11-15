@@ -6,14 +6,27 @@
 # specific task. Right now, only the STLConversionTask is specified.
 
 from pathlib import Path, PurePath
+
+from typing import Type
+
 from stepcvt import stepreader
 import cadquery as cq
+from stepcvt import choices
 
 
 class Project:
-    def __init__(self, name: str = "", sources: list = None):
+    def __init__(
+        self,
+        name: str = "",
+        sources: list = None,
+        available_choices: choices.Choices = None,
+    ):
         self.name = name
         self.sources = [] if sources is None else sources
+        self.available_choices = (
+            available_choices if available_choices is not None else choices.Choices([])
+        )
+        self.user_choices = choices.UserChoices(dict())
 
     def to_dict(self, root=None):
         return {"type": "Project", "name": self.name}
@@ -23,6 +36,16 @@ class Project:
             if cs.name == name or cs.path == path:
                 return
         self.sources.append(CADSource.load_step_file(name, path))
+
+    def accept_user_choices(self, user_choices: choices.UserChoices):
+        # validate user choices
+        self.available_choices.validate(user_choices)
+        self.user_choices = user_choices
+
+        # update dependent properties in partinfo
+        for sc in self.sources:
+            for info in sc.partinfo:
+                info.update_from_choices(self.user_choices)
 
     @classmethod
     def from_dict(cls, d):
@@ -48,6 +71,7 @@ class CADSource:
         # invoking parts()
         pass
 
+    @staticmethod
     def parts(
         assemblies,
     ):  # we should pass in self._step.assemblies, which is a list object
@@ -60,7 +84,7 @@ class CADSource:
                 result.append((obj["name"], obj["shape"]))
             # If the current object doesn't have a shape, recursively go into its 'shapes' list
             elif obj["shapes"] is not None:
-                result.extend(parts(obj["shapes"]))
+                result.extend(CADSource.parts(obj["shapes"]))
         return result
 
     @classmethod
@@ -141,7 +165,7 @@ class STLConversionInfo(TaskInfo):
         )
         return x
 
-    def rotate(self, part: cq.Assembly) -> cq.Assembly:
+    def rotate(self, part: cq.Shape) -> cq.Shape:
         """returns a rotated Cadquery Assembly object"""
         # rotate takes two vector to form a rotational axis, then applies the rotation degree to that axis
         # so has to make own x, y, z axis
@@ -221,10 +245,25 @@ class CountInfo(TaskInfo):
 class PartInfo:
     """Container for all part-specific task information"""
 
-    def __init__(self, part_id: str = "", info: list = None, part: cq.Assembly = None):
+    def __init__(
+        self,
+        part_id: str = "",
+        info: list = None,
+        part: cq.Assembly = None,
+        default_selected=False,
+        count=1,
+        scale=1.0,
+    ):
         self.part_id = part_id
         self.info = [] if info is None else info
         self._cad: cq.Assembly = part
+        self._default_selected = default_selected
+        self._default_count = count
+        self._default_scale = scale
+        self.selected = self._default_selected
+        self.count = self._default_count
+        self.scale = self._default_scale
+        self.choice_effects: [choices.ChoiceEffect] = []
 
     def add_info(self, info: TaskInfo):
         """adds the provided info to the self.info list"""
@@ -268,7 +307,7 @@ class PartInfo:
 
         info_dict_list: [TaskInfo] = dict["info"]
         for info_dict in info_dict_list:
-            info_type: type[TaskInfo] = TaskInfo.gettype(info_dict["type"])
+            info_type: Type[TaskInfo] = TaskInfo.gettype(info_dict["type"])
             info.append(info_type.from_dict(info_dict))
 
         return cls(part_id, info)
@@ -279,3 +318,25 @@ class PartInfo:
             "part_id": self.part_id,
             "info": [obj.to_dict() for obj in self.info],
         }
+
+    def update_from_choices(self, user_choices: choices.UserChoices):
+        """Update dependent properties using provided UserChoices,
+        if None, then reset those properties to their default value.
+        Choices with conflicting value is undefined behaviour"""
+        if user_choices is None:
+            self.selected = self._default_selected
+            self.count = self._default_count
+            self.scale = self._default_scale
+            return
+
+        for effect in filter(lambda e: e.cond.eval(user_choices), self.choice_effects):
+            if isinstance(effect, choices.RelativeCountEffect):
+                self.count += effect.count_delta
+            elif isinstance(effect, choices.AbsoluteCountEffect):
+                self.count = effect.count
+            elif isinstance(effect, choices.SelectionEffect):
+                self.selected = True
+            elif isinstance(effect, choices.ScaleEffect):
+                self.scale = effect.scale
+            else:
+                raise SyntaxError(f"Unknown ChoiceEffect {effect}")
