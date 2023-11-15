@@ -66,6 +66,7 @@ class CADSource:
         #
         # It is assumed that part_id and obj are obtained from
         # invoking parts()
+        dict = {}
         dict = dict.fromkeys(part_id, obj)
         partinfo = PartInfo.from_dict(dict)
 
@@ -106,9 +107,8 @@ class CADSource:
         # the loaded file can be a hidden attribute on CADSource
         cs = cls(name=name, path=path)
         sr = stepreader.StepReader()
-
-        cs._CADSource__step = sr.load(str(path))
-
+        sr.load(str(path))
+        cs._CADSource__step = sr
         return cs
 
     def to_dict(self, root=None):

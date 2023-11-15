@@ -179,7 +179,7 @@ def test_CADSource_parts(tmp_path):
     cs = CADSource.load_step_file("book", model_file)
 
     # for now, assume partids are the same as the names
-    expected_partids = set(["book_body", "spine"])
+    expected_partids = set(["book_body_part", "spine_part"])
 
     for partid, _ in cs.parts():
         assert partid in expected_partids
