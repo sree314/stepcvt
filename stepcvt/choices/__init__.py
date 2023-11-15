@@ -208,7 +208,7 @@ class MultiChooser(Chooser):
         super().__init__(text, varname)
 
 
-class BooleanChoice(Chooser):
+class BooleanChooser(Chooser):
     """Represents a yes/no choice. Usually rendered as a checkbox"""
 
     def __init__(
@@ -253,7 +253,7 @@ class Choices:
             # get the set of values that appeared in the user choice
             values = (
                 {chooser.sel_value, chooser.unsel_value}
-                if type(chooser) is BooleanChoice
+                if type(chooser) is BooleanChooser
                 else set(chooser.values)
             )
             values = filter(lambda v, val=val: v.value in val, values)
@@ -272,7 +272,7 @@ class Choices:
         for chooser in self.toposort():
             d[chooser.varname] = (
                 {chooser.sel_value.value, chooser.unsel_value.value}
-                if type(chooser) is BooleanChoice
+                if type(chooser) is BooleanChooser
                 else set(ch_v.value for ch_v in chooser.values)
             )
         return d

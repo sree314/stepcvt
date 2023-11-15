@@ -1,7 +1,8 @@
 import json
 import sys
 
-from stepcvt import *
+from stepcvt.choices import *
+from stepcvt.project import *
 
 
 def _parse_values(value_strs: [str]) -> [ChoiceValue]:
@@ -48,7 +49,8 @@ def choices_add(args):
             )
     # theoretically no other values should appear
 
-    # TODO: json dump modified project
+    with open(args.jsonfile, "w") as file:
+        json.dump(project.to_dict(), file)
 
 
 def choices_edit(args):
@@ -105,6 +107,9 @@ def choices_edit(args):
         # replace entire ChoiceValue list
         chooser.values = _parse_values(values)
 
+    with open(args.jsonfile, "w") as file:
+        json.dump(project.to_dict(), file)
+
 
 def choices_remove(args):
     with open(args.jsonfile, "r") as file:
@@ -136,6 +141,23 @@ def choices_remove(args):
     # select cond
     cv.cond = None
 
+    with open(args.jsonfile, "w") as file:
+        json.dump(project.to_dict(), file)
+
 
 def choices_apply(args):
-    pass
+    with open(args.jsonfile, "r") as file:
+        project = Project.from_dict(json.load(file))
+    if not project:
+        raise SyntaxError("Error loading project config from json")
+
+    user_choices = {}
+
+    for kv in args.choices_input:
+        k, v = kv.split("=", maxsplit=2)
+        user_choices[k] = v.split(",")
+
+    project.accept_user_choices(UserChoices(user_choices))
+
+    with open(args.jsonfile, "w") as file:
+        json.dump(project.to_dict(), file)

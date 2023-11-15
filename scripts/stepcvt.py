@@ -8,6 +8,7 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(description="")
     p.add_argument("-j", dest="jsonfile", type=str, help="Provide the jsonfile")
 
+    # --- Part ---
     sp = p.add_subparsers(dest="command")
 
     app = sp.add_parser("addpart", help="Add a part")
@@ -51,7 +52,7 @@ if __name__ == "__main__":
     subp_choices_add.add_argument(
         "values",
         default=set(),
-        nargs="*",
+        nargs="+",
         help="list of potential value and their optional condition, 'text':'value'[:'cond'], "
         "use [sel_value, unsel_value] for boolean chooser",
     )
@@ -73,7 +74,7 @@ if __name__ == "__main__":
     )
     subp_choices_edit.add_argument(
         "new_values",
-        nargs="*",
+        nargs="+",
         help="new value(s) to replace the selected ChoiceValue or ChoiceValue list. "
         "Format follows 'text':'value'[:'cond']",
     )
@@ -99,9 +100,10 @@ if __name__ == "__main__":
     subp_choices_apply = subp_choices.add_parser("apply", help="apply user choice to ")
     subp_choices_apply.add_argument(
         "choices_input",
-        nargs="*",
+        nargs="+",
         help="List of users choices in the format: varname=value[,extra_values]",
     )
+    # TODO: add commands to modify ChoiceEffect?
 
     args = p.parse_args()
     sys.exit(args.func(args))
