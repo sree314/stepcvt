@@ -54,6 +54,39 @@ def test_Project_from_dict_source():
     assert p.sources[1].name == "lower"
 
 
+def test_Project_from_dict_to_dict_roundtrip():
+    d = {
+        "type": "Project",
+        "name": "Name",
+        "sources": [
+            {
+                "type": "CADSource",
+                "name": "upper",
+                "path": "upper.step",
+                "partinfo": [],
+            },
+            {
+                "type": "CADSource",
+                "name": "lower",
+                "path": "lower.step",
+                "partinfo": [],
+            },
+        ],
+    }
+
+    p = Project.from_dict(d)
+    d2 = p.to_dict()
+
+    assert d2["type"] == d["type"]
+    assert d2["name"] == d2["name"]
+    assert len(d2["sources"]) == 2
+
+    # assume cad_source.to_dict() works correctly
+    # so do not check contents of the dictionary, other than the type
+    for s in d2["sources"]:
+        assert s["type"] == "CADSource"
+
+
 def test_Project_from_file(tmp_path):
     model_file = tmp_path / "book.step"
     book = models.book_model()
