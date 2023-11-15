@@ -1,5 +1,5 @@
 from stepcvt.choices import *
-from stepcvt.project import PartInfo, Project
+from stepcvt.project import PartInfo, Project, CADSource
 import math
 import pytest
 
@@ -32,10 +32,10 @@ user_choices = UserChoices(
 )
 
 project = Project("Nevermore", available_choices=project_available_choices)
-project.accept_user_choices(user_choices)
 
 partinfo = PartInfo("LightsMount", default_selected=False, count=0)
-partinfo.root_project = project  # This would be set in a more systematic way
+project.sources.append(CADSource("Lights Mount", None, [partinfo]))
+project.accept_user_choices(user_choices)
 
 
 def test_choice_expr():
@@ -51,6 +51,7 @@ def test_selection_effect():
     partinfo.choice_effects.append(
         SelectionEffect(ChoiceExpr("'Lights' in PrinterOptions"))
     )
+    partinfo.update_from_choices(project.user_choices)
     assert partinfo.selected
 
 
@@ -61,11 +62,13 @@ def test_relative_count_effect():
     partinfo.choice_effects.append(
         RelativeCountEffect(ChoiceExpr("'Filter' in PrinterOptions"), 1)
     )
+    partinfo.update_from_choices(project.user_choices)
     assert partinfo.count == 3
 
     partinfo.choice_effects.append(
         AbsoluteCountEffect(ChoiceExpr("NevermoreModel == 'V4'"), 2)
     )
+    partinfo.update_from_choices(project.user_choices)
     assert partinfo.count == 2
 
 
@@ -74,6 +77,7 @@ def test_scale_effect():
     partinfo.choice_effects.append(
         ScaleEffect(ChoiceExpr("NevermoreModel == 'V4'"), 1.2)
     )
+    partinfo.update_from_choices(project.user_choices)
     assert math.isclose(partinfo.scale, 1.2)
 
 

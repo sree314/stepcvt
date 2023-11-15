@@ -229,6 +229,42 @@ class Choices:
     def __init__(self, choices: [Chooser]):
         self.choices = choices
 
+    def validate(self, user_choices: UserChoices):
+        """Test validity of user choices input"""
+        avail_choices_dict = self.to_dict()
+        valid_user_choices = UserChoices(dict())
+        for key, val in user_choices.choices.items():
+            # test valid option
+            if key not in avail_choices_dict:
+                raise AttributeError(f"Unidentified option key '{key}'")
+            val_set = set(val) if type(val) is list or type(val) is set else {val}
+            if not val_set <= avail_choices_dict[key]:
+                raise AttributeError(f"Unidentified options '{val}' in '{key}'")
+
+            # test valid precondition
+            valid_user_choices.choices[key] = val
+            # get the chooser we just corresponding to the new user choice key val pair
+            chooser = next(
+                filter(
+                    lambda ch, key=key: ch.varname == key,
+                    self.choices,
+                )
+            )
+            # get the set of values that appeared in the user choice
+            values = (
+                {chooser.sel_value, chooser.unsel_value}
+                if type(chooser) is BooleanChoice
+                else set(chooser.values)
+            )
+            values = filter(lambda v, val=val: v.value in val, values)
+            # test if all preconditions for values in such set are satisfied
+            for value in values:
+                print(value.value)
+                if value.cond is not None and not value.cond.eval(valid_user_choices):
+                    raise AttributeError(
+                        f"Precondition for '{value.value}' not satisfied"
+                    )
+
     def to_dict(self) -> Dict[str, set]:
         """Serialize available choices as dict,
         list is converted to set for better membership testing"""

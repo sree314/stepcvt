@@ -6,6 +6,9 @@
 # specific task. Right now, only the STLConversionTask is specified.
 
 from pathlib import Path, PurePath
+
+from typing import Type
+
 from stepcvt import stepreader
 import cadquery as cq
 from stepcvt import choices
@@ -36,44 +39,13 @@ class Project:
 
     def accept_user_choices(self, user_choices: choices.UserChoices):
         # validate user choices
-        avail_choices_dict = self.available_choices.to_dict()
-        valid_user_choices = choices.UserChoices(dict())
-        for key, val in user_choices.choices.items():
-            # test valid option
-            if key not in avail_choices_dict:
-                raise AttributeError(f"Unidentified option key '{key}'")
-            val_set = set(val) if type(val) is list or type(val) is set else {val}
-            if not val_set <= avail_choices_dict[key]:
-                raise AttributeError(f"Unidentified options '{val}' in '{key}'")
-
-            # test valid precondition
-            valid_user_choices.choices[key] = val
-            # get the chooser we just corresponding to the new user choice key val pair
-            chooser = next(
-                filter(
-                    lambda ch, key=key: ch.varname == key,
-                    self.available_choices.choices,
-                )
-            )
-            # get the set of values that appeared in the user choice
-            values = (
-                {chooser.sel_value, chooser.unsel_value}
-                if type(chooser) is choices.BooleanChoice
-                else set(chooser.values)
-            )
-            values = filter(lambda v, val=val: v.value in val, values)
-            # test if all preconditions for values in such set are satisfied
-            for value in values:
-                print(value.value)
-                if value.cond is not None and not value.cond.eval(valid_user_choices):
-                    raise AttributeError(
-                        f"Precondition for '{value.value}' not satisfied"
-                    )
-
+        self.available_choices.validate(user_choices)
         self.user_choices = user_choices
 
-        # TODO: maintain reference to every partinfo, and calculates their properties for them only once when accepting a user choice
-        # saves repeated computation, and a reference from partinfo to project is not necessary
+        # update dependent properties in partinfo
+        for sc in self.sources:
+            for info in sc.partinfo:
+                info.update_from_choices(self.user_choices)
 
     @classmethod
     def from_dict(cls, d):
@@ -99,6 +71,7 @@ class CADSource:
         # invoking parts()
         pass
 
+    @staticmethod
     def parts(
         assemblies,
     ):  # we should pass in self._step.assemblies, which is a list object
@@ -111,7 +84,7 @@ class CADSource:
                 result.append((obj["name"], obj["shape"]))
             # If the current object doesn't have a shape, recursively go into its 'shapes' list
             elif obj["shapes"] is not None:
-                result.extend(parts(obj["shapes"]))
+                result.extend(CADSource.parts(obj["shapes"]))
         return result
 
     @classmethod
@@ -192,7 +165,7 @@ class STLConversionInfo(TaskInfo):
         )
         return x
 
-    def rotate(self, part: cq.Assembly) -> cq.Assembly:
+    def rotate(self, part: cq.Shape) -> cq.Shape:
         """returns a rotated Cadquery Assembly object"""
         # rotate takes two vector to form a rotational axis, then applies the rotation degree to that axis
         # so has to make own x, y, z axis
@@ -267,12 +240,13 @@ class PartInfo:
         self.part_id = part_id
         self.info = [] if info is None else info
         self._cad: cq.Assembly = part
-        self._selected = default_selected
+        self._default_selected = default_selected
         self._default_count = count
         self._default_scale = scale
+        self.selected = self._default_selected
+        self.count = self._default_count
+        self.scale = self._default_scale
         self.choice_effects: [choices.ChoiceEffect] = []
-        # TODO: need to decide when this is set
-        self.root_project: Project = None
 
     def add_info(self, info: TaskInfo):
         """adds the provided info to the self.info list"""
@@ -316,7 +290,7 @@ class PartInfo:
 
         info_dict_list: [TaskInfo] = dict["info"]
         for info_dict in info_dict_list:
-            info_type: type[TaskInfo] = TaskInfo.gettype(info_dict["type"])
+            info_type: Type[TaskInfo] = TaskInfo.gettype(info_dict["type"])
             info.append(info_type.from_dict(info_dict))
 
         return cls(part_id, info)
@@ -328,39 +302,24 @@ class PartInfo:
             "info": [obj.to_dict() for obj in self.info],
         }
 
-    # TODO: optimize so we don't iterate every time the properties are accessed
-    # maybe update value when a new user choice is set?
-    @property
-    def count(self):
-        count = self._default_count
-        for effect in filter(
-            lambda e: e.cond.eval(self.root_project.user_choices), self.choice_effects
-        ):
+    def update_from_choices(self, user_choices: choices.UserChoices):
+        """Update dependent properties using provided UserChoices,
+        if None, then reset those properties to their default value.
+        Choices with conflicting value is undefined behaviour"""
+        if user_choices is None:
+            self.selected = self._default_selected
+            self.count = self._default_count
+            self.scale = self._default_scale
+            return
+
+        for effect in filter(lambda e: e.cond.eval(user_choices), self.choice_effects):
             if isinstance(effect, choices.RelativeCountEffect):
-                count += effect.count_delta
+                self.count += effect.count_delta
             elif isinstance(effect, choices.AbsoluteCountEffect):
-                return effect.count
-        return count
-
-    @property
-    def selected(self):
-        return (
-            True
-            if self._selected
-            else any(
-                e.cond.eval(self.root_project.user_choices)
-                for e in self.choice_effects
-                if isinstance(e, choices.SelectionEffect)
-            )
-        )
-
-    @property
-    def scale(self):
-        return next(
-            filter(
-                lambda e: isinstance(e, choices.ScaleEffect)
-                and e.cond.eval(self.root_project.user_choices),
-                self.choice_effects,
-            ),
-            choices.ScaleEffect(None, self._default_scale),
-        ).scale
+                self.count = effect.count
+            elif isinstance(effect, choices.SelectionEffect):
+                self.selected = True
+            elif isinstance(effect, choices.ScaleEffect):
+                self.scale = effect.scale
+            else:
+                raise SyntaxError(f"Unknown ChoiceEffect {effect}")
