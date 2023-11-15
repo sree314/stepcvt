@@ -6,12 +6,9 @@
 # specific task. Right now, only the STLConversionTask is specified.
 
 from pathlib import Path, PurePath
-
 from typing import Type
-
-from stepcvt import stepreader
+from stepcvt import stepreader, choices
 import cadquery as cq
-from stepcvt import choices
 
 
 class Project:
@@ -59,7 +56,7 @@ class CADSource:
         self.name = name
         self.path = path
         self.partinfo = [] if partinfo is None else partinfo
-        self._step = None
+        self.__step = None
 
     def add_partinfo(self, part_id, obj):
         # create a PartInfo object with the specified part_id, and
@@ -69,22 +66,38 @@ class CADSource:
         #
         # It is assumed that part_id and obj are obtained from
         # invoking parts()
-        pass
+        dict = dict.fromkeys(part_id, obj)
+        partinfo = PartInfo.from_dict(dict)
 
-    @staticmethod
-    def parts(
-        assemblies,
-    ):  # we should pass in self._step.assemblies, which is a list object
-        # returns a list of parts in the CAD model as list of (part_id, object)
-        # where object corresponds to the shape in the OCCT library
+        return partinfo
+
+    # def parts(self, assemblies=None):  # we should pass in self._step.assemblies, which is a list object
+    #     # returns a list of parts in the CAD model as list of (part_id, object)
+    #     # where object corresponds to the shape in the OCCT library
+    #     assemblies = self._CADSource__step.assemblies
+    #     result = []
+    #     for obj in assemblies:
+    #         # If the current object has a shape, append it to the results
+    #         if obj["shape"] is not None:
+    #             result.append((obj["name"], obj["shape"]))
+    #         # If the current object doesn't have a shape, recursively go into its 'shapes' list
+    #         elif obj["shapes"] is not None:
+    #             result.extend(CADSource.parts(obj["shapes"]))
+
+    #     return result
+
+    def parts(self, assemblies=None):
+        if assemblies is None:
+            assemblies = self._CADSource__step.assemblies
+        return self._recursive_parts(assemblies)
+
+    def _recursive_parts(self, assemblies):
         result = []
         for obj in assemblies:
-            # If the current object has a shape, append it to the results
             if obj["shape"] is not None:
                 result.append((obj["name"], obj["shape"]))
-            # If the current object doesn't have a shape, recursively go into its 'shapes' list
             elif obj["shapes"] is not None:
-                result.extend(CADSource.parts(obj["shapes"]))
+                result.extend(self._recursive_parts(obj["shapes"]))
         return result
 
     @classmethod
@@ -93,7 +106,9 @@ class CADSource:
         # the loaded file can be a hidden attribute on CADSource
         cs = cls(name=name, path=path)
         sr = stepreader.StepReader()
-        cs._step = sr.load(str(path.as_posix()))
+
+        cs._CADSource__step = sr.load(str(path))
+
         return cs
 
     def to_dict(self, root=None):

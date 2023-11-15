@@ -2,6 +2,7 @@ import pytest
 from stepcvt.project import CADSource, PartInfo, TextInfo
 from pathlib import Path, PurePath
 import models
+import sys
 
 # python -m pytest -k "test_cadsource.py"
 
@@ -26,7 +27,10 @@ def test_CADSource_to_dict():
     assert not p.is_absolute()
 
 
-def test_CADSource_to_dict_absolute():
+@pytest.mark.skipif(
+    sys.platform.startswith("linux"), reason="not meant for linux systems"
+)
+def test_CADSource_to_dict_absolute_windows():
     x = CADSource(name="Rapido Hotend", path=Path("C:/tmp/abc/xyz.step"))
     # In Linux, /tmp/abc/xyz.step would be an absolute path,
     # but on Windows, an absolute path would look like C:\tmp\abc\xyz.step
@@ -43,7 +47,10 @@ def test_CADSource_to_dict_absolute():
     assert not p.is_absolute()
 
 
-def test_CADSource_to_dict_absolute_error():
+@pytest.mark.skipif(
+    sys.platform.startswith("linux"), reason="not meant for linux systems"
+)
+def test_CADSource_to_dict_absolute_error_windows():
     x = CADSource(name="Rapido Hotend", path=Path("C:/tmp/abc/xyz.step"))
     # should raise error when path is absolute, but to_dict is not
     # provided the optional root parameter
@@ -52,6 +59,9 @@ def test_CADSource_to_dict_absolute_error():
         d = x.to_dict()
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("linux"), reason="not meant for linux systems"
+)
 def test_CADSource_from_dict_windows():
     d = {"type": "CADSource", "name": "Rapido", "path": "abc/xyz.step"}
 
@@ -70,6 +80,9 @@ def test_CADSource_from_dict_windows():
     )  # modified to accomodate windows path
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not meant for windows systems"
+)
 def test_CADSource_from_dict_unix():
     d = {"type": "CADSource", "name": "Rapido", "path": "abc/xyz.step"}
     cs = CADSource.from_dict(d, PurePath("/tmp"))
