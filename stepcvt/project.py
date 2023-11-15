@@ -26,13 +26,26 @@ class Project:
         self.user_choices = choices.UserChoices(dict())
 
     def to_dict(self, root=None):
-        return {"type": "Project", "name": self.name}
+        # Cannot find test to know if passed?
+        return {"type": "Project", "name": self.name, "sources": self.sources}
 
     def add_source(self, name: str, path: Path):
-        for cs in self.sources:
-            if cs.name == name or cs.path == path:
-                return
-        self.sources.append(CADSource.load_step_file(name, path))
+        # proj from file test says p.sources not type CADSource
+        # proj from file Dup test says no keyerror raised for duplicate
+        if not self.sources:
+            for cs in self.sources:
+                if cs.name == name or cs.path == path:
+                    raise KeyError("Cannot add source that already exists")
+        cs = CADSource.load_step_file(name, path)
+        self.sources.append(cs.to_dict(root=path))
+
+    @classmethod
+    def from_dict(cls, d):
+        # TestFromDict throws error in CADSource from_Dict()
+        if "sources" in d:
+            return cls(d["name"], CADSource.from_dict(d["sources"]))
+        else:
+            return cls(d["name"])
 
     def accept_user_choices(self, user_choices: choices.UserChoices):
         # validate user choices
@@ -43,10 +56,6 @@ class Project:
         for sc in self.sources:
             for info in sc.partinfo:
                 info.update_from_choices(self.user_choices)
-
-    @classmethod
-    def from_dict(cls, d):
-        return Project(d["name"])
 
 
 class CADSource:
