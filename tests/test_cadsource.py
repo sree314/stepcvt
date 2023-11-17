@@ -155,7 +155,7 @@ def test_CADSource_from_dict_partinfo():
     assert cs.name == d["name"]
     assert str(cs.path) == d["path"]
     assert len(cs.partinfo) == 2
-    assert all([isinstance(x, dict) for x in cs.partinfo])
+    assert all([isinstance(x, PartInfo) for x in cs.partinfo])
     # the partinfo type is still a dict, modified the test, we could change this back to partinfo when it's implemented?
 
 
