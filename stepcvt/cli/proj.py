@@ -6,7 +6,7 @@ Project CLI Overview:
 	   - If no .json file specified, use default file "stepcvt.json"
 	   - If no name specified, use default name "proj"
 
-		<stepcvt> [-j] [json file path/name.json] <make> [specific project "name"]
+		<stepcvt> [-j] [json file path/name.json] <make> [-n] [specific project "name"]
 		<stepcvt> [-j] [json file path/name.json] <make>
 		<stepcvt> <make> [-n] [specific project "name"]
 		<stepcvt> <make>
@@ -31,44 +31,42 @@ Project CLI Overview:
 		 - If that fails, throw an error
 	   - If no "name" given, throw an error
 
-		<stepcvt> [-j] [json file path/name.json] <name> [-n] [new "name"]
-		<stepcvt> <name> [-n] [new "name"]
+		<stepcvt> [-j] [json file path/name.json] <newName> [new "name"]
+		<stepcvt> <newName> [new "name"]
 """
 
-import argparse
 import json
-from stepcvt.project import Project
+from ..project import *
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Create and manage Project Objects")
-    parser.add_argument(
-        "-j", "--json", help="Path to an empty .json file or one with a saved project"
-    )
-    parser.add_argument("command", help="Subcommand to run (make, display, name)")
-    parser.add_argument("-n", "--newName", help="Optional subcommand input")
-    args = parser.parse_args()
 
-    if args.json:
-        jsonFile = open(args.j, "x")
+def getJSON(args):
+    # return a json file if one was specified, otherwise open/make
+    #    a standard json named stepcvt.json
+    if args.jsonfile:
+        return open(args.j, "x")
     else:
-        jsonFile = open("stepcvt.json", "x")
+        return open("stepcvt.json", "x")
 
-    if args.newName:
-        n = args.newName
+
+def make(args):
+    jf = getJSON(args)
+    # add handling of empty json to make new project
+    p = Project.from_dict(jf)
+    if args.name is None:
+        p.name = "stepcvt"
     else:
-        n = "stepcvt"
+        p.name = args.name
+    jf.close()
 
-    if args.command == "make":
-        jsonData = json.load(jsonFile)
-        Project.from_dict(n, jsonData)
 
-    elif args.command == "display":
-        print(json.load(jsonFile))
+def display(args):
+    jf = getJSON(args)
+    print(jf)
+    jf.close()
 
-    elif args.command == "name":
-        Project.name = n
 
-    else:
-        print("ERROR")
-
-    jsonFile.close()
+def newName(args):
+    jf = getJSON(args)
+    p = Project.from_dict(jf)
+    p.name = args.name
+    jf.close()

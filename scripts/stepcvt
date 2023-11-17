@@ -29,5 +29,16 @@ if __name__ == "__main__":
     epp.add_argument("-c", "--count", type=int, help="Change the count of the part")
     epp.set_defaults(func=part.edit_part)
 
+    npn = sp.add_parser("newProjName", help="Change a stepcvt Project's name")
+    npn.add_argument("name", help="Specify the new name")
+    npn.set_defaults(func=proj.newName)
+
+    mnp = sp.add_parser("make", help="Build an exisitng project or new project")
+    mnp.add_argument("-n", "--name", type=str, help="Name of project if not default stepcvt.json")
+    mnp.set_defaults(func=proj.make)
+
+    dp = sp.add_parser("display", help="Display the contents of a project")
+    dp.set_defaults(func=proj.display)
+
     args = p.parse_args()
     sys.exit(args.func(args))
