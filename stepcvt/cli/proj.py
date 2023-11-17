@@ -40,48 +40,49 @@ from ..project import *
 
 
 def getJSON(args, req):  # Adapted from part.py CLI code
+    # req = True means the file oppened must be a valid json
+    # req = False means the file can be init if empty
     if args.jsonfile is None:
-        if req:
-            print("ERROR: Need to provide a jsonfile")
-            return None, None
-        else:
-            jfName = "stepcvt.json"
+        jfName = "stepcvt.json"
     else:
         jfName = args.jsonfile
 
     try:
-        with open(jfName, "x") as jf:
-            d = json.load(jf)
+        jf = open(jfName, "x")
+        d = json.load(jf)
     except FileNotFoundError as fe:
         print(f"ERROR: {args.jsonfile} doesn't exist")
         return None, None
     except json.JSONDecodeError:
-        print("ERROR: Invalid json syntax")
-        return None, None
+        if req:
+            print("ERROR: Invalid json syntax")
+            return None, None
+        else:
+            d = {"type": "Project", "name": "stepcvt", "sources": []}
+            json.dump(d, jf)
     return d, jf
 
 
 def make(args):
     data, jf = getJSON(args, False)
-
-    # add handling of empty json to make new project
-
     p = Project.from_dict(data)
-    if args.name is None:
-        p.name = "stepcvt"
-    else:
+    if args.name:
         p.name = args.name
     jf.close()
 
 
 def display(args):
-    data, jf = getJSON(args, False)
+    data, jf = getJSON(args, True)
+    if data is None:
+        return False
     print(data)
     jf.close()
 
 
 def newName(args):
-    data, jf = getJSON(args, False)
+    data, jf = getJSON(args, True)
+    if data is None:
+        return False
     p = Project.from_dict(data)
     p.name = args.name
     jf.close()
