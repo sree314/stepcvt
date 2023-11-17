@@ -26,26 +26,25 @@ class Project:
         self.user_choices = choices.UserChoices(dict())
 
     def to_dict(self, root=None):
-        # Roundtrip test throws error in CADSource from_dict() method
-        return {"type": "Project", "name": self.name, "sources": self.sources}
+        s = []
+        for cd in self.sources:
+            s.append(CADSource.to_dict(cd))
+        return {"type": "Project", "name": self.name, "sources": s}
 
     def add_source(self, name: str, path: Path):
-        # proj from file test says p.sources not type CADSource
-        #  - Because CADSource to_dict() not returning proper type
-        # proj from file Dup test says no keyerror raised for duplicate
-        #  - Because add_source not working
-        if not self.sources:
+        if self.sources:
             for cs in self.sources:
                 if cs.name == name or cs.path == path:
                     raise KeyError("Cannot add source that already exists")
-        cs = CADSource.load_step_file(name, path)
-        self.sources.append(cs.to_dict(root=path))
+        self.sources.append(CADSource.load_step_file(name, path))
 
     @classmethod
     def from_dict(cls, d):
-        # TestFromDict throws error in CADSource from_Dict() method
         if "sources" in d:
-            return cls(d["name"], CADSource.from_dict(d["sources"]))
+            s = []
+            for cd in d["sources"]:
+                s.append(CADSource.from_dict(cd))
+            return cls(d["name"], s)
         else:
             return cls(d["name"])
 
