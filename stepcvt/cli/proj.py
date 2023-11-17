@@ -39,19 +39,34 @@ import json
 from ..project import *
 
 
-def getJSON(args):
-    # return a json file if one was specified, otherwise open/make
-    #    a standard json named stepcvt.json
-    if args.jsonfile:
-        return open(args.j, "x")
+def getJSON(args, req):  # Adapted from part.py CLI code
+    if args.jsonfile is None:
+        if req:
+            print("ERROR: Need to provide a jsonfile")
+            return None, None
+        else:
+            jfName = "stepcvt.json"
     else:
-        return open("stepcvt.json", "x")
+        jfName = args.jsonfile
+
+    try:
+        with open(jfName, "x") as jf:
+            d = json.load(jf)
+    except FileNotFoundError as fe:
+        print(f"ERROR: {args.jsonfile} doesn't exist")
+        return None, None
+    except json.JSONDecodeError:
+        print("ERROR: Invalid json syntax")
+        return None, None
+    return d, jf
 
 
 def make(args):
-    jf = getJSON(args)
+    data, jf = getJSON(args, False)
+
     # add handling of empty json to make new project
-    p = Project.from_dict(jf)
+
+    p = Project.from_dict(data)
     if args.name is None:
         p.name = "stepcvt"
     else:
@@ -60,13 +75,13 @@ def make(args):
 
 
 def display(args):
-    jf = getJSON(args)
-    print(jf)
+    data, jf = getJSON(args, False)
+    print(data)
     jf.close()
 
 
 def newName(args):
-    jf = getJSON(args)
-    p = Project.from_dict(jf)
+    data, jf = getJSON(args, False)
+    p = Project.from_dict(data)
     p.name = args.name
     jf.close()
