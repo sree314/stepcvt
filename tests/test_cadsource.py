@@ -198,3 +198,4 @@ def test_CADSource_add_partinfo(tmp_path):
 
         assert isinstance(pi, PartInfo)
         assert pi.part_id == partid
+        assert cs.partinfo[-1] is pi
