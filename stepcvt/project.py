@@ -76,26 +76,9 @@ class CADSource:
         #
         # It is assumed that part_id and obj are obtained from
         # invoking parts()
-        dict = {}
-        dict = dict.fromkeys(part_id, obj)
-        partinfo = PartInfo.from_dict(dict)
+        partinfo = PartInfo.from_part(part_id, obj)
 
         return partinfo
-
-    # def parts(self, assemblies=None):  # we should pass in self._step.assemblies, which is a list object
-    #     # returns a list of parts in the CAD model as list of (part_id, object)
-    #     # where object corresponds to the shape in the OCCT library
-    #     assemblies = self._CADSource__step.assemblies
-    #     result = []
-    #     for obj in assemblies:
-    #         # If the current object has a shape, append it to the results
-    #         if obj["shape"] is not None:
-    #             result.append((obj["name"], obj["shape"]))
-    #         # If the current object doesn't have a shape, recursively go into its 'shapes' list
-    #         elif obj["shapes"] is not None:
-    #             result.extend(CADSource.parts(obj["shapes"]))
-
-    #     return result
 
     def parts(self, assemblies=None):
         if assemblies is None:
@@ -124,6 +107,7 @@ class CADSource:
     def to_dict(self, root=None):
         path = PurePath(self.path)
         drive = path.drive
+        partinfo_dicts = [pi.to_dict() for pi in self.partinfo]
 
         if path.is_absolute():
             if not root:
@@ -137,7 +121,7 @@ class CADSource:
             "type": "CADSource",
             "name": self.name,
             "path": str(path.as_posix()),
-            "partinfo": self.partinfo,
+            "partinfo": partinfo_dicts,
         }
 
     def from_dict(self, root=None):
