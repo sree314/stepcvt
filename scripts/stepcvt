@@ -28,7 +28,7 @@ if __name__ == "__main__":
     epp = sp.add_parser("editpart", help="Change part properties")
     # can only change one part at a time
     epp.add_argument("id", help="Specify partid for the part to be edited")
-    epp.add_argument("-c", "--count", type=int, help="Change the count of the part")
+    epp.add_argument("-c", "--count", type=int, help="Change the default count of the part")
     epp.set_defaults(func=part.edit_part)
 
     # --- Choices ---
@@ -106,4 +106,5 @@ if __name__ == "__main__":
     # TODO: add commands to modify ChoiceEffect?
 
     args = p.parse_args()
+    print(args)
     sys.exit(args.func(args))

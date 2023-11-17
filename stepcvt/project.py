@@ -239,7 +239,7 @@ class TextInfo(TaskInfo):
 
         return cls(text=d["text"])
 
-
+'''
 class CountInfo(TaskInfo):
     """Class for storing count for the part"""
 
@@ -255,7 +255,7 @@ class CountInfo(TaskInfo):
             raise ValueError(f"Incorrect value for type, expected CountInfo")
 
         return cls(count=d["count"])
-
+'''
 
 class PartInfo:
     """Container for all part-specific task information"""
