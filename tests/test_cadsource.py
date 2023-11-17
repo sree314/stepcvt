@@ -194,7 +194,6 @@ def test_CADSource_add_partinfo(tmp_path):
     cs = CADSource.load_step_file("book", model_file)
 
     for partid, obj in cs.parts():
-        print(partid, obj)
         pi = cs.add_partinfo(partid, obj)
 
         assert isinstance(pi, PartInfo)
