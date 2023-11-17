@@ -79,6 +79,8 @@ class CADSource:
         partinfo = PartInfo.from_part(part_id, obj)
         self.partinfo.append(partinfo)
 
+        return partinfo
+
     def parts(self, assemblies=None):
         if assemblies is None:
             assemblies = self._CADSource__step.assemblies
