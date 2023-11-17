@@ -22,6 +22,7 @@
 
 import argparse
 from pathlib import Path
+import stepcvt
 from stepcvt.project import Project
 import re
 
@@ -111,6 +112,6 @@ if __name__ == "__main__":
     # finally, export each object to a step file. For now, assume the
     # object's partid is a valid filename too.
     for pi in source.partinfo:
-        ofile = odir / f"{pi.part_id}.step"
+        ofile = odir / f"{pi.part_id}.stl"
         print(f"Exporting to {ofile}")
-        pi.export_to_stl(odir / f"{pi.part_id}.step")
+        pi.export_to_stl(ofile)

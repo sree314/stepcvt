@@ -9,6 +9,7 @@ from pathlib import Path, PurePath
 from typing import Type
 from stepcvt import stepreader, choices
 import cadquery as cq
+import OCP
 
 
 class Project:
@@ -88,9 +89,10 @@ class CADSource:
 
     def _recursive_parts(self, assemblies):
         result = []
+
         for obj in assemblies:
             if obj["shape"] is not None:
-                result.append((obj["name"], obj["shape"]))
+                result.append((obj["name"], cq.Shape(obj["shape"])))
             elif obj["shapes"] is not None:
                 result.extend(self._recursive_parts(obj["shapes"]))
         return result
@@ -273,16 +275,22 @@ class PartInfo:
         stlinfo = next(
             (info for info in self.info if isinstance(info, STLConversionInfo)), None
         )
-        assem = self._cad.toCompound()
+
+        if isinstance(self._cad, cq.Shape):
+            assem = self._cad
+        else:
+            assem = self._cad.toCompound()
+
         if stlinfo is not None:
             assem = stlinfo.rotate(assem)
             cq.exporters.export(
                 assem,
-                stl_output,
+                str(stl_output),
                 tolerance=stlinfo.linearTolerance,
                 angularTolerance=stlinfo.angularTolerance,
             )
-        cq.exporters.export(assem, stl_output)
+        else:
+            cq.exporters.export(assem, str(stl_output))
 
     @classmethod
     def from_part(cls, part_id: str, part):
