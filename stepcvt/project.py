@@ -239,6 +239,7 @@ class TextInfo(TaskInfo):
 
         return cls(text=d["text"])
 
+
 '''
 class CountInfo(TaskInfo):
     """Class for storing count for the part"""
@@ -256,6 +257,7 @@ class CountInfo(TaskInfo):
 
         return cls(count=d["count"])
 '''
+
 
 class PartInfo:
     """Container for all part-specific task information"""
