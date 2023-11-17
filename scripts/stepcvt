@@ -106,5 +106,4 @@ if __name__ == "__main__":
     # TODO: add commands to modify ChoiceEffect?
 
     args = p.parse_args()
-    print(args)
     sys.exit(args.func(args))
