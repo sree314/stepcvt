@@ -26,13 +26,27 @@ class Project:
         self.user_choices = choices.UserChoices(dict())
 
     def to_dict(self, root=None):
-        return {"type": "Project", "name": self.name}
+        s = []
+        for cd in self.sources:
+            s.append(CADSource.to_dict(cd))
+        return {"type": "Project", "name": self.name, "sources": s}
 
     def add_source(self, name: str, path: Path):
-        for cs in self.sources:
-            if cs.name == name or cs.path == path:
-                return
+        if self.sources:
+            for cs in self.sources:
+                if cs.name == name or cs.path == path:
+                    raise KeyError("Cannot add source that already exists")
         self.sources.append(CADSource.load_step_file(name, path))
+
+    @classmethod
+    def from_dict(cls, d):
+        if "sources" in d:
+            s = []
+            for cd in d["sources"]:
+                s.append(CADSource.from_dict(cd))
+            return cls(d["name"], s)
+        else:
+            return cls(d["name"])
 
     def accept_user_choices(self, user_choices: choices.UserChoices):
         # validate user choices
@@ -43,10 +57,6 @@ class Project:
         for sc in self.sources:
             for info in sc.partinfo:
                 info.update_from_choices(self.user_choices)
-
-    @classmethod
-    def from_dict(cls, d):
-        return Project(d["name"])
 
 
 class CADSource:
