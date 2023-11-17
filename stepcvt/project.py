@@ -77,8 +77,7 @@ class CADSource:
         # It is assumed that part_id and obj are obtained from
         # invoking parts()
         partinfo = PartInfo.from_part(part_id, obj)
-
-        return partinfo
+        self.partinfo.append(partinfo)
 
     def parts(self, assemblies=None):
         if assemblies is None:
