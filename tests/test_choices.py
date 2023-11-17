@@ -3,29 +3,30 @@ from stepcvt.project import PartInfo, Project, CADSource
 import math
 import pytest
 
+choices_dict = [
+    {
+        "type": "SingleChooser",
+        "text": "Nevermore Model Version Number",
+        "varname": "NevermoreModel",
+        "values": [{"text": "V4", "value": "V4"}, {"text": "V6", "value": "V6"}],
+    },
+    {
+        "type": "MultiChooser",
+        "text": "Optional Printer Features",
+        "varname": "PrinterOptions",
+        "values": [
+            {"text": "HEPA Filter", "value": "Filter"},
+            {"text": "Lights", "value": "Lights"},
+            {
+                "text": "Lights controller",
+                "value": "LightsCtrl",
+                "cond": "'Lights' in PrinterOptions",
+            },
+        ],
+    },
+]
 
-project_available_choices = Choices(
-    [
-        SingleChooser(
-            "Nevermore Model Version Number",
-            "NevermoreModel",
-            [ChoiceValue("V4", "V4"), ChoiceValue("V6", "V6")],
-        ),
-        MultiChooser(
-            "Optional Printer Features",
-            "PrinterOptions",
-            [
-                ChoiceValue("HEPA Filter", "Filter"),
-                ChoiceValue("Lights", "Lights"),
-                ChoiceValue(
-                    "Lights controller",
-                    "LightsCtrl",
-                    ChoiceExpr("'Lights' in PrinterOptions"),
-                ),
-            ],
-        ),
-    ]
-)
+project_available_choices = Choices.from_dict(choices_dict)
 
 user_choices = UserChoices(
     {"NevermoreModel": "V4", "PrinterOptions": {"Filter", "Lights"}}
@@ -95,3 +96,7 @@ def test_invalid_user_choice():
     ):
         invalid_pre_cond = UserChoices({"PrinterOptions": {"LightsCtrl"}})
         project.accept_user_choices(invalid_pre_cond)
+
+
+def test_choice_expr_to_dict():
+    pass

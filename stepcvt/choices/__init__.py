@@ -1,6 +1,6 @@
 import ast
 from functools import reduce
-from typing import Dict
+from typing import Dict, Type
 
 
 class UserChoices:
@@ -21,6 +21,9 @@ class UserChoices:
 
     def __init__(self, key_vals: dict):
         self.choices = key_vals
+
+    def to_dict(self):
+        return self.choices
 
 
 class ChoiceExpr:
@@ -108,6 +111,13 @@ class ChoiceExpr:
         """Returns the variables in the expression"""
         return ChoiceExpr.extract_ast_vars(ast.parse(self.expr, mode="eval"))
 
+    @classmethod
+    def from_dict(cls):
+        pass
+
+    def to_dict(self):
+        pass
+
 
 class ChoiceEffect:
     """The base class for the effect on a part that is choice-dependent.
@@ -169,6 +179,13 @@ class Chooser:
         self.text = text  # human-readable text
         self.varname = varname  # variable name
 
+    @classmethod
+    def gettype(cls, typename) -> Type["Chooser"]:
+        for t in cls.__subclasses__():
+            if t.__name__ == typename:
+                return t
+        raise TypeError(f"{typename} is not a valid Chooser type")
+
 
 class ChoiceValue:
     """Represents a value available for a choice."""
@@ -180,6 +197,13 @@ class ChoiceValue:
         # if this is not None, then it represents a value
         # which is only available if the condition is true.
         self.cond = cond
+
+    @classmethod
+    def from_dict(cls):
+        pass
+
+    def to_dict(self):
+        pass
 
 
 class SingleChooser(Chooser):
@@ -195,6 +219,13 @@ class SingleChooser(Chooser):
         self.values = values
         super().__init__(text, varname)
 
+    @classmethod
+    def from_dict(cls):
+        pass
+
+    def to_dict(self):
+        pass
+
 
 class MultiChooser(Chooser):
     """Represents a choice where multiple values can be selected from a
@@ -206,6 +237,13 @@ class MultiChooser(Chooser):
     def __init__(self, text: str, varname: str, values: [ChoiceValue]):
         self.values = values
         super().__init__(text, varname)
+
+    @classmethod
+    def from_dict(cls):
+        pass
+
+    def to_dict(self):
+        pass
 
 
 class BooleanChooser(Chooser):
@@ -222,6 +260,13 @@ class BooleanChooser(Chooser):
         self.unsel_value = unsel_value
         super().__init__(text, varname)
 
+    @classmethod
+    def from_dict(cls):
+        pass
+
+    def to_dict(self):
+        pass
+
 
 class Choices:
     """A collection of choices available in a project."""
@@ -231,7 +276,7 @@ class Choices:
 
     def validate(self, user_choices: UserChoices):
         """Test validity of user choices input"""
-        avail_choices_dict = self.to_dict()
+        avail_choices_dict = self.to_simple_dict()
         valid_user_choices = UserChoices(dict())
         for key, val in user_choices.choices.items():
             # test valid option
@@ -265,8 +310,9 @@ class Choices:
                         f"Precondition for '{value.value}' not satisfied"
                     )
 
-    def to_dict(self) -> Dict[str, set]:
+    def to_simple_dict(self) -> Dict[str, set]:
         """Serialize available choices as dict,
+        preserving only varname -> value, i.e. no text and cond,
         list is converted to set for better membership testing"""
         d = dict()
         for chooser in self.toposort():
@@ -276,6 +322,13 @@ class Choices:
                 else set(ch_v.value for ch_v in chooser.values)
             )
         return d
+
+    def to_dict(self):
+        pass
+
+    @classmethod
+    def from_dict(cls, d):
+        pass
 
     def toposort(self):
         # returns a topological ordering of choices
