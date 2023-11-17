@@ -124,15 +124,17 @@ class CADSource:
             "partinfo": partinfo_dicts,
         }
 
-    def from_dict(self, root=None):
+    @classmethod
+    def from_dict(cls, d, root=None):
         if root:
-            path = PurePath(root / self["path"])
+            path = PurePath(root / d["path"])
         else:
-            path = PurePath(self["path"])
+            path = PurePath(d["path"])
 
-        partinfo = self.get("partinfo", [])
-        cs = CADSource(name=self["name"], path=path, partinfo=partinfo)
-        return cs
+        partinfo_dicts = d.get("partinfo", [])
+        partinfo = [PartInfo.from_dict(pi) for pi in partinfo_dicts]
+
+        return cls(name=d["name"], path=path, partinfo=partinfo)
 
 
 class TaskInfo:
