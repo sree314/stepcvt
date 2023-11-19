@@ -29,6 +29,7 @@ def test_STLConversionInfo_from_dict():
     assert si.linearTolerance == 0.1
     assert si.angularTolerance == 0.1
 
+
 @pytest.mark.skip(reason="rotation test is incorrect but rotation functionality works")
 def test_STLConverstionInfo_rotate():
     model = MODELS.get("book")
