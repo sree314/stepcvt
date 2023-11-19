@@ -32,13 +32,13 @@ def stlconvert(args):
         print("ERROR: Need to specify at least one partid if --all is not included")
         return 1
 
-    if args.rotation == True:
+    if args.rotation.length == 3:
         rotation = args.rotation
-    if args.linearTolerance == True:
+    if args.linearTolerance.length == 1:
         linearTol = args.linearTolerance
     else:
         linearTol = 0.1
-    if args.angularTolerance == True:
+    if args.angularTolerance.length == 1:
         angularTol = args.angularTolerance
     else:
         angularTol = 0.1
@@ -48,8 +48,28 @@ def stlconvert(args):
     )
     partID.rotate(source)
 
+    for partid, obj in source.parts():
+        if partid == partID:
+            if obj.info.length > 0:
+                for el in obj.info:
+                    if el.gettype() == STLConversionInfo:
+                        # edit existing TaskInfo case
+                        el = STLConversionInfo(
+                            rotation=rotation,
+                            linearTolerance=linearTol,
+                            angularTolerance=angularTol,
+                        )
+            else:
+                # create new taskInfo object
+                obj.info.append(newTask=TaskInfo())
+                obj.info[1] = STLConversionInfo(
+                    rotation=rotation,
+                    linearTolerance=linearTol,
+                    angularTolerance=angularTol,
+                )
+
     with open(args.jsonfile, "w") as jf:
-        json.dump(partID.to_dict(), jf)
+        json.dump(project.to_dict(), jf)
     return 0
 
 
