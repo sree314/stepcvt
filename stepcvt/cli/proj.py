@@ -1,5 +1,4 @@
-from ..project import *
-
+# Samantha Kriegsman
 """
 Project CLI Overview:
 	1. Create project and make a new json file to be filled in
