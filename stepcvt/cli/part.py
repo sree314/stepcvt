@@ -47,8 +47,8 @@ def add_part(args):
                             print(f"{partid} has already been added")
                         else:
                             source.add_partinfo(partid, obj)
-                for pi in source.partinfo:
-                    pi.add_info(CountInfo())
+                # for pi in source.partinfo:
+                #     pi.add_info(CountInfo())
 
     with open(args.jsonfile, "w") as jf:
         json.dump(p.to_dict(), jf)
@@ -108,6 +108,8 @@ def edit_part(args):
     else:
         source = p.sources[0]
         edit_id = args.id
+        if args.count == None:
+            raise NotImplementedError("Can only modify count for now")
 
         all_ids = set([p[0] for p in source.parts()])
         existing_ids = set([pi.part_id for pi in source.partinfo])
@@ -118,18 +120,9 @@ def edit_part(args):
         if edit_id not in existing_ids:
             raise NotImplementedError("Need to add the part first")
 
-        ci = False  # used to check whether there are multiple CountInfo objects
         for pi in source.partinfo:
             if edit_id == pi.part_id:
-                for i in pi.info:
-                    if isinstance(i, CountInfo):
-                        if not ci:
-                            ci = True
-                            i.count = args.count
-                        else:
-                            raise NotImplementedError(
-                                "Cannot handle multiple CountInfo"
-                            )
+                pi._default_count = args.count
 
     with open(args.jsonfile, "w") as jf:
         json.dump(p.to_dict(), jf)

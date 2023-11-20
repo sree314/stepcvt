@@ -1,3 +1,3 @@
 from stepcvt import project
 
-__all__ = ["part", "proj"]
+__all__ = ["part", "choices", "proj"]

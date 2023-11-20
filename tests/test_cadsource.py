@@ -2,6 +2,7 @@ import pytest
 from stepcvt.project import CADSource, PartInfo, TextInfo
 from pathlib import Path, PurePath
 import models
+import sys
 
 # python -m pytest -k "test_cadsource.py"
 
@@ -26,7 +27,10 @@ def test_CADSource_to_dict():
     assert not p.is_absolute()
 
 
-def test_CADSource_to_dict_absolute():
+@pytest.mark.skipif(
+    sys.platform.startswith("linux"), reason="not meant for linux systems"
+)
+def test_CADSource_to_dict_absolute_windows():
     x = CADSource(name="Rapido Hotend", path=Path("C:/tmp/abc/xyz.step"))
     # In Linux, /tmp/abc/xyz.step would be an absolute path,
     # but on Windows, an absolute path would look like C:\tmp\abc\xyz.step
@@ -43,7 +47,10 @@ def test_CADSource_to_dict_absolute():
     assert not p.is_absolute()
 
 
-def test_CADSource_to_dict_absolute_error():
+@pytest.mark.skipif(
+    sys.platform.startswith("linux"), reason="not meant for linux systems"
+)
+def test_CADSource_to_dict_absolute_error_windows():
     x = CADSource(name="Rapido Hotend", path=Path("C:/tmp/abc/xyz.step"))
     # should raise error when path is absolute, but to_dict is not
     # provided the optional root parameter
@@ -52,6 +59,9 @@ def test_CADSource_to_dict_absolute_error():
         d = x.to_dict()
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("linux"), reason="not meant for linux systems"
+)
 def test_CADSource_from_dict_windows():
     d = {"type": "CADSource", "name": "Rapido", "path": "abc/xyz.step"}
 
@@ -70,6 +80,9 @@ def test_CADSource_from_dict_windows():
     )  # modified to accomodate windows path
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not meant for windows systems"
+)
 def test_CADSource_from_dict_unix():
     d = {"type": "CADSource", "name": "Rapido", "path": "abc/xyz.step"}
     cs = CADSource.from_dict(d, PurePath("/tmp"))
@@ -142,7 +155,7 @@ def test_CADSource_from_dict_partinfo():
     assert cs.name == d["name"]
     assert str(cs.path) == d["path"]
     assert len(cs.partinfo) == 2
-    assert all([isinstance(x, dict) for x in cs.partinfo])
+    assert all([isinstance(x, PartInfo) for x in cs.partinfo])
     # the partinfo type is still a dict, modified the test, we could change this back to partinfo when it's implemented?
 
 
@@ -166,7 +179,7 @@ def test_CADSource_parts(tmp_path):
     cs = CADSource.load_step_file("book", model_file)
 
     # for now, assume partids are the same as the names
-    expected_partids = set(["book_body", "spine"])
+    expected_partids = set(["book_body_part", "spine_part"])
 
     for partid, _ in cs.parts():
         assert partid in expected_partids
@@ -185,3 +198,4 @@ def test_CADSource_add_partinfo(tmp_path):
 
         assert isinstance(pi, PartInfo)
         assert pi.part_id == partid
+        assert cs.partinfo[-1] is pi
