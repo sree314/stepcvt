@@ -26,13 +26,11 @@ choices_dict = [
     },
 ]
 
-project_available_choices = Choices.from_dict(choices_dict)
-
-user_choices = UserChoices(
+user_choices = UserChoices.from_dict(
     {"NevermoreModel": "V4", "PrinterOptions": {"Filter", "Lights"}}
 )
 
-project = Project("Nevermore", available_choices=project_available_choices)
+project = Project("Nevermore", available_choices=Choices.from_dict(choices_dict))
 
 partinfo = PartInfo("LightsMount", default_selected=False, count=0)
 project.sources.append(CADSource("Lights Mount", None, [partinfo]))
@@ -99,4 +97,4 @@ def test_invalid_user_choice():
 
 
 def test_choice_expr_to_dict():
-    pass
+    assert project.available_choices.to_dict() == choices_dict

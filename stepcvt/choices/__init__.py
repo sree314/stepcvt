@@ -25,6 +25,10 @@ class UserChoices:
     def to_dict(self):
         return self.choices
 
+    @classmethod
+    def from_dict(cls, d):
+        return cls(d)
+
 
 class ChoiceExpr:
     """A logical expression involving a choice variable that evaluates to true or false.
@@ -85,9 +89,9 @@ class ChoiceExpr:
             ChoiceExpr.sanitize_ast(node.left)
             ChoiceExpr.sanitize_ast(node.right)
         elif isinstance(node, ast.IfExp):
-            ChoiceEffect.sanitize_ast(node.test)
-            ChoiceEffect.sanitize_ast(node.body)
-            ChoiceEffect.sanitize_ast(node.orelse)
+            ChoiceExpr.sanitize_ast(node.test)
+            ChoiceExpr.sanitize_ast(node.body)
+            ChoiceExpr.sanitize_ast(node.orelse)
         elif type(node) in {ast.Name, ast.Constant}:
             return
         else:
@@ -99,7 +103,6 @@ class ChoiceExpr:
         # extract dict items into assignment
         # as scope context for evaluating expr
         scope = "(lambda "
-        print(user_choices.choices)
         for key, value in user_choices.choices.items():
             if isinstance(value, str):
                 value = f"'{value}'"
@@ -112,11 +115,11 @@ class ChoiceExpr:
         return ChoiceExpr.extract_ast_vars(ast.parse(self.expr, mode="eval"))
 
     @classmethod
-    def from_dict(cls):
-        pass
+    def from_dict(cls, s):
+        return cls(s)
 
     def to_dict(self):
-        pass
+        return self.expr
 
 
 class ChoiceEffect:
@@ -186,6 +189,9 @@ class Chooser:
                 return t
         raise TypeError(f"{typename} is not a valid Chooser type")
 
+    def to_dict(self):
+        raise NotImplementedError("Don't call this method on parent class")
+
 
 class ChoiceValue:
     """Represents a value available for a choice."""
@@ -199,11 +205,21 @@ class ChoiceValue:
         self.cond = cond
 
     @classmethod
-    def from_dict(cls):
-        pass
+    def from_dict(cls, d):
+        return cls(
+            d["text"],
+            d["value"],
+            ChoiceExpr.from_dict(d["cond"]) if "cond" in d else None,
+        )
 
     def to_dict(self):
-        pass
+        d = {
+            "text": self.text,
+            "value": self.value,
+        }
+        if self.cond:
+            d["cond"] = self.cond.to_dict()
+        return d
 
 
 class SingleChooser(Chooser):
@@ -220,11 +236,18 @@ class SingleChooser(Chooser):
         super().__init__(text, varname)
 
     @classmethod
-    def from_dict(cls):
-        pass
+    def from_dict(cls, d):
+        return cls(
+            d["text"], d["varname"], [ChoiceValue.from_dict(x) for x in d["values"]]
+        )
 
     def to_dict(self):
-        pass
+        return {
+            "type": self.__class__.__name__,
+            "text": self.text,
+            "varname": self.varname,
+            "values": [v.to_dict() for v in self.values],
+        }
 
 
 class MultiChooser(Chooser):
@@ -239,11 +262,18 @@ class MultiChooser(Chooser):
         super().__init__(text, varname)
 
     @classmethod
-    def from_dict(cls):
-        pass
+    def from_dict(cls, d):
+        return cls(
+            d["text"], d["varname"], [ChoiceValue.from_dict(x) for x in d["values"]]
+        )
 
     def to_dict(self):
-        pass
+        return {
+            "type": self.__class__.__name__,
+            "text": self.text,
+            "varname": self.varname,
+            "values": [v.to_dict() for v in self.values],
+        }
 
 
 class BooleanChooser(Chooser):
@@ -261,11 +291,17 @@ class BooleanChooser(Chooser):
         super().__init__(text, varname)
 
     @classmethod
-    def from_dict(cls):
-        pass
+    def from_dict(cls, d):
+        return cls(d["text"], d["varname"], d["sel_value"], d["unsel_value"])
 
     def to_dict(self):
-        pass
+        return {
+            "type": self.__class__.__name__,
+            "text": self.text,
+            "varname": self.varname,
+            "sel_value": self.sel_value,
+            "unsel_value": self.unsel_value,
+        }
 
 
 class Choices:
@@ -304,7 +340,6 @@ class Choices:
             values = filter(lambda v, val=val: v.value in val, values)
             # test if all preconditions for values in such set are satisfied
             for value in values:
-                print(value.value)
                 if value.cond is not None and not value.cond.eval(valid_user_choices):
                     raise AttributeError(
                         f"Precondition for '{value.value}' not satisfied"
@@ -324,11 +359,11 @@ class Choices:
         return d
 
     def to_dict(self):
-        pass
+        return [c.to_dict() for c in self.choices]
 
     @classmethod
     def from_dict(cls, d):
-        pass
+        return cls([Chooser.gettype(c["type"]).from_dict(c) for c in d])
 
     def toposort(self):
         # returns a topological ordering of choices
