@@ -1,6 +1,6 @@
 import json
-from ..project import *
 from stepcvt import project
+from ..project import *
 
 
 def stlconvert(args):
@@ -26,31 +26,24 @@ def stlconvert(args):
     else:
         source = p.sources[0]
 
-    if args.partID:
-        partID = args.partID
-    else:
-        print("ERROR: Need to specify at least one partid if --all is not included")
-        return 1
-
-    if args.rotation.length == 3:
+    if args.rotation:
         rotation = args.rotation
-    if args.linearTolerance.length == 1:
+    else:
+        rotation = [0, 0, 0]
+
+    if args.linearTolerance:
         linearTol = args.linearTolerance
     else:
         linearTol = 0.1
-    if args.angularTolerance.length == 1:
+
+    if args.angularTolerance:
         angularTol = args.angularTolerance
     else:
         angularTol = 0.1
 
-    partID = project.STLConversionInfo(
-        rotation=rotation, linearTolerance=linearTol, angularTolerance=angularTol
-    )
-    partID.rotate(source)
-
     for partid, obj in source.parts():
-        if partid == partID:
-            if obj.info.length > 0:
+        if partid == args.partID:
+            if len(obj.info) > 0:
                 for el in obj.info:
                     if el.gettype() == STLConversionInfo:
                         # edit existing TaskInfo case
@@ -61,11 +54,12 @@ def stlconvert(args):
                         )
             else:
                 # create new taskInfo object
-                obj.info.append(newTask=TaskInfo())
-                obj.info[1] = STLConversionInfo(
-                    rotation=rotation,
-                    linearTolerance=linearTol,
-                    angularTolerance=angularTol,
+                obj.info.append(
+                    STLConversionInfo(
+                        rotation=rotation,
+                        linearTolerance=linearTol,
+                        angularTolerance=angularTol,
+                    )
                 )
 
     with open(args.jsonfile, "w") as jf:
@@ -73,7 +67,4 @@ def stlconvert(args):
     return 0
 
 
-# issues:
-# - there is no real way to connect a part to an STLConversionInfo object besides naming the object the partID
-# - future work would be to have a --listConversionsApplied arg but since all our conversion info objects are seperate I'm not sure how to get all parts from all conversion info objects -- connects to issue 1
-# Note: this uses strategies from part.py
+stlconvert()
