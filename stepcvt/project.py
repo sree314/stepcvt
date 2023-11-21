@@ -6,27 +6,58 @@
 # specific task. Right now, only the STLConversionTask is specified.
 
 from pathlib import Path, PurePath
-from stepcvt import stepreader
+from typing import Type
+from stepcvt import stepreader, choices
 import cadquery as cq
+import OCP
 
 
 class Project:
-    def __init__(self, name: str = "", sources: list = None):
+    def __init__(
+        self,
+        name: str = "",
+        sources: list = None,
+        available_choices: choices.Choices = None,
+    ):
         self.name = name
         self.sources = [] if sources is None else sources
+        self.available_choices = (
+            available_choices if available_choices is not None else choices.Choices([])
+        )
+        self.user_choices = choices.UserChoices(dict())
 
     def to_dict(self, root=None):
-        return {"type": "Project", "name": self.name}
+        s = []
+        for cd in self.sources:
+            s.append(CADSource.to_dict(cd))
+        return {"type": "Project", "name": self.name, "sources": s}
 
     def add_source(self, name: str, path: Path):
-        for cs in self.sources:
-            if cs.name == name or cs.path == path:
-                return
+        if self.sources:
+            for cs in self.sources:
+                if cs.name == name or cs.path == path:
+                    raise KeyError("Cannot add source that already exists")
         self.sources.append(CADSource.load_step_file(name, path))
 
     @classmethod
     def from_dict(cls, d):
-        return Project(d["name"])
+        if "sources" in d:
+            s = []
+            for cd in d["sources"]:
+                s.append(CADSource.from_dict(cd))
+            return cls(d["name"], s)
+        else:
+            return cls(d["name"])
+
+    def accept_user_choices(self, user_choices: choices.UserChoices):
+        # validate user choices
+        self.available_choices.validate(user_choices)
+        self.user_choices = user_choices
+
+        # update dependent properties in partinfo
+        for sc in self.sources:
+            for info in sc.partinfo:
+                info.update_from_choices(self.user_choices)
 
 
 class CADSource:
@@ -36,7 +67,7 @@ class CADSource:
         self.name = name
         self.path = path
         self.partinfo = [] if partinfo is None else partinfo
-        self._step = None
+        self.__step = None
 
     def add_partinfo(self, part_id, obj):
         # create a PartInfo object with the specified part_id, and
@@ -46,21 +77,24 @@ class CADSource:
         #
         # It is assumed that part_id and obj are obtained from
         # invoking parts()
-        pass
+        partinfo = PartInfo.from_part(part_id, obj)
+        self.partinfo.append(partinfo)
 
-    def parts(
-        assemblies,
-    ):  # we should pass in self._step.assemblies, which is a list object
-        # returns a list of parts in the CAD model as list of (part_id, object)
-        # where object corresponds to the shape in the OCCT library
+        return partinfo
+
+    def parts(self, assemblies=None):
+        if assemblies is None:
+            assemblies = self._CADSource__step.assemblies
+        return self._recursive_parts(assemblies)
+
+    def _recursive_parts(self, assemblies):
         result = []
+
         for obj in assemblies:
-            # If the current object has a shape, append it to the results
             if obj["shape"] is not None:
-                result.append((obj["name"], obj["shape"]))
-            # If the current object doesn't have a shape, recursively go into its 'shapes' list
+                result.append((obj["name"], cq.Shape(obj["shape"])))
             elif obj["shapes"] is not None:
-                result.extend(parts(obj["shapes"]))
+                result.extend(self._recursive_parts(obj["shapes"]))
         return result
 
     @classmethod
@@ -69,12 +103,14 @@ class CADSource:
         # the loaded file can be a hidden attribute on CADSource
         cs = cls(name=name, path=path)
         sr = stepreader.StepReader()
-        cs._step = sr.load(str(path.as_posix()))
+        sr.load(str(path))
+        cs._CADSource__step = sr
         return cs
 
     def to_dict(self, root=None):
         path = PurePath(self.path)
         drive = path.drive
+        partinfo_dicts = [pi.to_dict() for pi in self.partinfo]
 
         if path.is_absolute():
             if not root:
@@ -88,18 +124,20 @@ class CADSource:
             "type": "CADSource",
             "name": self.name,
             "path": str(path.as_posix()),
-            "partinfo": self.partinfo,
+            "partinfo": partinfo_dicts,
         }
 
-    def from_dict(self, root=None):
+    @classmethod
+    def from_dict(cls, d, root=None):
         if root:
-            path = PurePath(root / self["path"])
+            path = PurePath(root / d["path"])
         else:
-            path = PurePath(self["path"])
+            path = PurePath(d["path"])
 
-        partinfo = self.get("partinfo", [])
-        cs = CADSource(name=self["name"], path=path, partinfo=partinfo)
-        return cs
+        partinfo_dicts = d.get("partinfo", [])
+        partinfo = [PartInfo.from_dict(pi) for pi in partinfo_dicts]
+
+        return cls(name=d["name"], path=path, partinfo=partinfo)
 
 
 class TaskInfo:
@@ -141,7 +179,7 @@ class STLConversionInfo(TaskInfo):
         )
         return x
 
-    def rotate(self, part: cq.Assembly) -> cq.Assembly:
+    def rotate(self, part: cq.Shape) -> cq.Shape:
         """returns a rotated Cadquery Assembly object"""
         # rotate takes two vector to form a rotational axis, then applies the rotation degree to that axis
         # so has to make own x, y, z axis
@@ -201,30 +239,28 @@ class TextInfo(TaskInfo):
         return cls(text=d["text"])
 
 
-class CountInfo(TaskInfo):
-    """Class for storing count for the part"""
-
-    def __init__(self, count: int = 1):
-        self.count = count
-
-    def to_dict(self):
-        return {"type": "CountInfo", "count": self.count}
-
-    @classmethod
-    def from_dict(cls, d):
-        if d.get("type", None) != "CountInfo":
-            raise ValueError(f"Incorrect value for type, expected CountInfo")
-
-        return cls(count=d["count"])
-
-
 class PartInfo:
     """Container for all part-specific task information"""
 
-    def __init__(self, part_id: str = "", info: list = None, part: cq.Assembly = None):
+    def __init__(
+        self,
+        part_id: str = "",
+        info: list = None,
+        part: cq.Assembly = None,
+        default_selected=False,
+        count=1,
+        scale=1.0,
+    ):
         self.part_id = part_id
         self.info = [] if info is None else info
         self._cad: cq.Assembly = part
+        self._default_selected = default_selected
+        self._default_count = count
+        self._default_scale = scale
+        self.selected = self._default_selected
+        self.count = self._default_count
+        self.scale = self._default_scale
+        self.choice_effects: [choices.ChoiceEffect] = []
 
     def add_info(self, info: TaskInfo):
         """adds the provided info to the self.info list"""
@@ -239,16 +275,22 @@ class PartInfo:
         stlinfo = next(
             (info for info in self.info if isinstance(info, STLConversionInfo)), None
         )
-        assem = self._cad.toCompound()
+
+        if isinstance(self._cad, cq.Shape):
+            assem = self._cad
+        else:
+            assem = self._cad.toCompound()
+
         if stlinfo is not None:
             assem = stlinfo.rotate(assem)
             cq.exporters.export(
                 assem,
-                stl_output,
+                str(stl_output),
                 tolerance=stlinfo.linearTolerance,
                 angularTolerance=stlinfo.angularTolerance,
             )
-        cq.exporters.export(assem, stl_output)
+        else:
+            cq.exporters.export(assem, str(stl_output))
 
     @classmethod
     def from_part(cls, part_id: str, part):
@@ -268,7 +310,7 @@ class PartInfo:
 
         info_dict_list: [TaskInfo] = dict["info"]
         for info_dict in info_dict_list:
-            info_type: type[TaskInfo] = TaskInfo.gettype(info_dict["type"])
+            info_type: Type[TaskInfo] = TaskInfo.gettype(info_dict["type"])
             info.append(info_type.from_dict(info_dict))
 
         return cls(part_id, info)
@@ -279,3 +321,25 @@ class PartInfo:
             "part_id": self.part_id,
             "info": [obj.to_dict() for obj in self.info],
         }
+
+    def update_from_choices(self, user_choices: choices.UserChoices):
+        """Update dependent properties using provided UserChoices,
+        if None, then reset those properties to their default value.
+        Choices with conflicting value is undefined behaviour"""
+        if user_choices is None:
+            self.selected = self._default_selected
+            self.count = self._default_count
+            self.scale = self._default_scale
+            return
+
+        for effect in filter(lambda e: e.cond.eval(user_choices), self.choice_effects):
+            if isinstance(effect, choices.RelativeCountEffect):
+                self.count += effect.count_delta
+            elif isinstance(effect, choices.AbsoluteCountEffect):
+                self.count = effect.count
+            elif isinstance(effect, choices.SelectionEffect):
+                self.selected = True
+            elif isinstance(effect, choices.ScaleEffect):
+                self.scale = effect.scale
+            else:
+                raise SyntaxError(f"Unknown ChoiceEffect {effect}")

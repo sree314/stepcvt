@@ -1,12 +1,11 @@
-from ..project import *
-
+# Samantha Kriegsman
 """
 Project CLI Overview:
 	1. Create project and make a new json file to be filled in
 	   - If no .json file specified, use default file "stepcvt.json"
 	   - If no name specified, use default name "proj"
 
-		<stepcvt> [-j] [json file path/name.json] <make> [specific project "name"]
+		<stepcvt> [-j] [json file path/name.json] <make> [-n] [specific project "name"]
 		<stepcvt> [-j] [json file path/name.json] <make>
 		<stepcvt> <make> [-n] [specific project "name"]
 		<stepcvt> <make>
@@ -31,44 +30,58 @@ Project CLI Overview:
 		 - If that fails, throw an error
 	   - If no "name" given, throw an error
 
-		<stepcvt> [-j] [json file path/name.json] <name> [-n] [new "name"]
-		<stepcvt> <name> [-n] [new "name"]
+		<stepcvt> [-j] [json file path/name.json] <newName> [new "name"]
+		<stepcvt> <newName> [new "name"]
 """
 
-import argparse
 import json
-from stepcvt.project import Project
+from ..project import *
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Create and manage Project Objects")
-    parser.add_argument(
-        "-j", "--json", help="Path to an empty .json file or one with a saved project"
-    )
-    parser.add_argument("command", help="Subcommand to run (make, display, name)")
-    parser.add_argument("-n", "--newName", help="Optional subcommand input")
-    args = parser.parse_args()
 
-    if args.json:
-        jsonFile = open(args.j, "x")
+def getJSON(args, req):  # Adapted from part.py CLI code
+    # req = True means the file oppened must be a valid json
+    # req = False means the file can be init if empty
+    if args.jsonfile is None:
+        jfName = "stepcvt.json"
     else:
-        jsonFile = open("stepcvt.json", "x")
+        jfName = args.jsonfile
 
-    if args.newName:
-        n = args.newName
-    else:
-        n = "stepcvt"
+    try:
+        jf = open(jfName, "x")
+        d = json.load(jf)
+    except FileNotFoundError as fe:
+        print(f"ERROR: {args.jsonfile} doesn't exist")
+        return None, None
+    except json.JSONDecodeError:
+        if req:
+            print("ERROR: Invalid json syntax")
+            return None, None
+        else:
+            d = {"type": "Project", "name": "stepcvt", "sources": []}
+            json.dump(d, jf)
+    return d, jf
 
-    if args.command == "make":
-        jsonData = json.load(jsonFile)
-        Project.from_dict(n, jsonData)
 
-    elif args.command == "display":
-        print(json.load(jsonFile))
+def make(args):
+    data, jf = getJSON(args, False)
+    p = Project.from_dict(data)
+    if args.name:
+        p.name = args.name
+    jf.close()
 
-    elif args.command == "name":
-        Project.name = n
 
-    else:
-        print("ERROR")
+def display(args):
+    data, jf = getJSON(args, True)
+    if data is None:
+        return False
+    print(data)
+    jf.close()
 
-    jsonFile.close()
+
+def newName(args):
+    data, jf = getJSON(args, True)
+    if data is None:
+        return False
+    p = Project.from_dict(data)
+    p.name = args.name
+    jf.close()
