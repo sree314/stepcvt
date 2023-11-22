@@ -65,6 +65,3 @@ def stlconvert(args):
     with open(args.jsonfile, "w") as jf:
         json.dump(project.to_dict(), jf)
     return 0
-
-
-stlconvert()
