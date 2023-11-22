@@ -28,7 +28,8 @@ def test_CADSource_to_dict():
 
 
 @pytest.mark.skipif(
-    sys.platform.startswith("linux"), reason="not meant for linux systems"
+    sys.platform.startswith("linux") or sys.platform.startswith("darwin"),
+    reason="not meant for linux or macOS systems",
 )
 def test_CADSource_to_dict_absolute_windows():
     x = CADSource(name="Rapido Hotend", path=Path("C:/tmp/abc/xyz.step"))
@@ -48,7 +49,8 @@ def test_CADSource_to_dict_absolute_windows():
 
 
 @pytest.mark.skipif(
-    sys.platform.startswith("linux"), reason="not meant for linux systems"
+    sys.platform.startswith("linux") or sys.platform.startswith("darwin"),
+    reason="not meant for linux or macOS systems",
 )
 def test_CADSource_to_dict_absolute_error_windows():
     x = CADSource(name="Rapido Hotend", path=Path("C:/tmp/abc/xyz.step"))
@@ -60,7 +62,8 @@ def test_CADSource_to_dict_absolute_error_windows():
 
 
 @pytest.mark.skipif(
-    sys.platform.startswith("linux"), reason="not meant for linux systems"
+    sys.platform.startswith("linux") or sys.platform.startswith("darwin"),
+    reason="not meant for linux or macOS systems",
 )
 def test_CADSource_from_dict_windows():
     d = {"type": "CADSource", "name": "Rapido", "path": "abc/xyz.step"}
