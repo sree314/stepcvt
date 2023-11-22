@@ -31,6 +31,13 @@ if __name__ == "__main__":
     epp.add_argument("-c", "--count", type=int, help="Change the default count of the part")
     epp.set_defaults(func=part.edit_part)
 
+    cvtp = sp.add_parser("stlconvert", help="specify how to convert to stl")
+    cvtp.add_argument("partID", help="Specify partid for parts to be added")
+    cvtp.add_argument("--rotation", type=int, nargs=3, help="3 integers for x, y, z rotation")
+    cvtp.add_argument("--linearTolerance", type=float, help="float for linear tolerance")
+    cvtp.add_argument("--angularTolerance", type=float, help="float for angular tolerance")
+    cvtp.set_defaults(func=task.stlconvert)
+
     # --- Choices ---
     p_choices = sp.add_parser("choices")
     # nested subparser possible?
