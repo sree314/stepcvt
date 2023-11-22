@@ -22,7 +22,7 @@ tests = {
     "project test": "stepcvt -j json.js make test",  # making the project
     "source test": "stepcvt -j json.js add Stealthburner_Printhead_V6.stp",  # adding the source
     "part test": "stepcvt -j json.js addpart --all",  # adding the parts
-    "stl test": "stepcvt -j json.js rotation ",  # adding angular/linear tolerances
+    "stl test": "stepcvt -j json.js stlcvt partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
     "export test": "stepcvt -j json.js exportstl path",  # exporting the stls
 }
 
