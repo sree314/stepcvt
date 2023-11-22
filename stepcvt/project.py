@@ -29,7 +29,7 @@ class Project:
     def to_dict(self, root=None):
         s = []
         for cd in self.sources:
-            s.append(CADSource.to_dict(cd))
+            s.append(CADSource.to_dict(cd, root=root))
         return {"type": "Project", "name": self.name, "sources": s}
 
     def add_source(self, name: str, path: Path):
