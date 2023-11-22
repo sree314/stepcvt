@@ -130,6 +130,14 @@ class ChoiceEffect:
     def __init__(self, cond: ChoiceExpr, *args, **kwargs):
         self.cond = cond
 
+    @classmethod
+    def gettype(cls, type_name):
+        """Return one of the subtypes given by the name"""
+        for t in cls.__subclasses__():
+            if t.__name__ == type_name:
+                return t
+        raise TypeError(f"{type_name} is not a valid ChoiceEffect type")
+
 
 class SelectionEffect(ChoiceEffect):
     """Represents a yes/no choice for a part. If the condition evaluates
@@ -137,7 +145,12 @@ class SelectionEffect(ChoiceEffect):
 
     """
 
-    pass
+    @classmethod
+    def from_dict(cls, d):
+        return cls(ChoiceExpr.from_dict(d["cond"]))
+
+    def to_dict(self):
+        return {"type": self.__class__.__name__, "cond": self.cond.to_dict()}
 
 
 class RelativeCountEffect(ChoiceEffect):
@@ -150,6 +163,17 @@ class RelativeCountEffect(ChoiceEffect):
         self.count_delta = count_delta
         super().__init__(cond, *args, **kwargs)
 
+    @classmethod
+    def from_dict(cls, d):
+        return cls(ChoiceExpr.from_dict(d["cond"]), d["count_delta"])
+
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "cond": self.cond.to_dict(),
+            "count_delta": self.count_delta,
+        }
+
 
 class AbsoluteCountEffect(ChoiceEffect):
     """Changes the count for a part depending on a choice. This models an
@@ -160,6 +184,17 @@ class AbsoluteCountEffect(ChoiceEffect):
     def __init__(self, cond: ChoiceExpr, count, *args, **kwargs):
         self.count = count
         super().__init__(cond, *args, **kwargs)
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(ChoiceExpr.from_dict(d["cond"]), d["count"])
+
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "cond": self.cond.to_dict(),
+            "count": self.count,
+        }
 
 
 class ScaleEffect(ChoiceEffect):
@@ -172,6 +207,17 @@ class ScaleEffect(ChoiceEffect):
     def __init__(self, cond: ChoiceExpr, scale, *args, **kwargs):
         self.scale = scale
         super().__init__(cond, *args, **kwargs)
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(ChoiceExpr.from_dict(d["cond"]), d["scale"])
+
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "cond": self.cond.to_dict(),
+            "scale": self.scale,
+        }
 
 
 class Chooser:

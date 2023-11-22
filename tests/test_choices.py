@@ -50,22 +50,45 @@ def test_selection_effect():
     partinfo.choice_effects.append(
         SelectionEffect(ChoiceExpr("'Lights' in PrinterOptions"))
     )
+    partinfo.choice_effects.append(
+        SelectionEffect.from_dict(
+            {"type": "SelectionEffect", "cond": "'Lights' in PrinterOptions"}
+        )
+    )
     partinfo.update_from_choices(project.user_choices)
     assert partinfo.selected
 
 
 def test_relative_count_effect():
     partinfo.choice_effects.append(
-        RelativeCountEffect(ChoiceExpr("'Lights' in PrinterOptions"), 2)
+        RelativeCountEffect.from_dict(
+            {
+                "type": "RelativeCountEffect",
+                "cond": "'Lights' in PrinterOptions",
+                "count_delta": 2,
+            }
+        )
     )
     partinfo.choice_effects.append(
-        RelativeCountEffect(ChoiceExpr("'Filter' in PrinterOptions"), 1)
+        RelativeCountEffect.from_dict(
+            {
+                "type": "RelativeCountEffect",
+                "cond": "'Filter' in PrinterOptions",
+                "count_delta": 1,
+            }
+        )
     )
     partinfo.update_from_choices(project.user_choices)
     assert partinfo.count == 3
 
     partinfo.choice_effects.append(
-        AbsoluteCountEffect(ChoiceExpr("NevermoreModel == 'V4'"), 2)
+        AbsoluteCountEffect.from_dict(
+            {
+                "type": "AbsoluteCountEffect",
+                "cond": "NevermoreModel == 'V4'",
+                "count": 2,
+            }
+        )
     )
     partinfo.update_from_choices(project.user_choices)
     assert partinfo.count == 2
@@ -74,7 +97,9 @@ def test_relative_count_effect():
 def test_scale_effect():
     assert math.isclose(partinfo.scale, 1.0)
     partinfo.choice_effects.append(
-        ScaleEffect(ChoiceExpr("NevermoreModel == 'V4'"), 1.2)
+        ScaleEffect.from_dict(
+            {"type": "ScaleEffect", "cond": "NevermoreModel == 'V4'", "scale": 1.2}
+        )
     )
     partinfo.update_from_choices(project.user_choices)
     assert math.isclose(partinfo.scale, 1.2)
