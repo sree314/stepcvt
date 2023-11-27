@@ -57,8 +57,8 @@ def getJSON(args, req):  # Adapted from part.py CLI code
             print("ERROR: Invalid json syntax")
             return None, None
         else:
-            d = {"type": "Project", "name": "stepcvt", "sources": []}
-            json.dump(d, jf)
+            p = Project()
+            json.dump(p.to_dict(), jf)
     return d, jf
 
 
