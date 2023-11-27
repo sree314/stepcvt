@@ -47,8 +47,10 @@ def getJSON(args, req):  # Adapted from part.py CLI code
         jfName = args.jsonfile
 
     try:
-        jf = open(jfName, "x")
-        d = json.load(jf)
+        jf = open(jfName, "r+")
+        rd = jf.read()
+        pd = json.loads(rd)
+        return pd, jf
     except FileNotFoundError as fe:
         print(f"ERROR: {args.jsonfile} doesn't exist")
         return None, None
@@ -59,7 +61,7 @@ def getJSON(args, req):  # Adapted from part.py CLI code
         else:
             p = Project()
             json.dump(p.to_dict(), jf)
-    return d, jf
+            return p.to_dict(), jf
 
 
 def make(args):
