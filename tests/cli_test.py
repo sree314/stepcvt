@@ -19,7 +19,9 @@ def test_command(command, test_name):
 
 # defining the tests
 tests = {
-    "project test": "stepcvt -j json.js make test",  # making the project
+    "Project Test 1": "stepcvt -j json.js make",  # making the project
+    "Project Test 2": "stepcvt -j json.js name test",  # renaming the project from 'stepcvt' to 'test'
+    "Project Test 3": "stepcvt -j json.js display",  # show the projects contents so far
     "source test": "stepcvt -j json.js add Stealthburner_Printhead_V6.stp",  # adding the source
     "part test": "stepcvt -j json.js addpart --all",  # adding the parts
     "stl test": "stepcvt -j json.js stlcvt partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
