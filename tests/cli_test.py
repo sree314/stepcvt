@@ -26,12 +26,18 @@ tests = {
     "part test": "stepcvt -j json.js addpart --all",  # adding the parts
     "stl test": "stepcvt -j json.js stlcvt partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
     "export test": "stepcvt -j json.js exportstl path",  # exporting the stls
+    "choices add test": "stepcvt -j json.js choices add-chooser --choice-type single 'Printer Options' 'options' "
+    "--values 'HEPA filter':'Filter' 'Build area lights':'Lights':'version=='V6''",  # Add a single chooser
+    "choices edit test": "stepcvt choices edit 'options' --choice-value 'Lights' "
+    "'Build area lights':'Lights':'version==''V4''",  # rename one of the choice value
+    "choices remove test": "stepcvt choices remove 'options' --choice-value 'Lights' --cond",  # remove one option value
+    "choices apply test": "stepcvt choices apply Version=v6 Options=Lights,Filter",  # apply a user choice
 }
 
 # Get test name from command line argument
 test_name = sys.argv[1] if len(sys.argv) > 1 else None
 
-# run something like: python cli_test.py "project test" if you only want to look at project test
+# run something like: python cli_test.py project if you only want to look at project test
 if test_name:
     if test_name in tests:
         test_command(tests[test_name], test_name)
