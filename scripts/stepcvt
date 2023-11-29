@@ -118,4 +118,22 @@ if __name__ == "__main__":
     dp.set_defaults(func=proj.display)
 
     args = p.parse_args()
-    sys.exit(args.func(args))
+    # sys.exit(args.func(args))
+
+    # CADSource
+    add_parser = sp.add_parser('addstep', help='Add a step file')
+    add_parser.add_argument('-j', dest='json', type=str, help='Name of the json file to add on to')
+    add_parser.add_argument('step_path', type=str, help='Path of the step file to add')
+    add_parser.set_defaults(func=source.add_step)
+
+    # removing step
+    remove_parser = sp.add_parser('rmstep', help='Remove a step file')
+    remove_parser.add_argument('-j', dest='json', type=str, help='Name of the json file to remove from')
+    remove_parser.add_argument('step_path', type=str, help='Name of the step file to remove')
+    remove_parser.set_defaults(func=source.remove_step)
+
+    # listing parts
+    list_parser = sp.add_parser('liststep', help='List parts of a step file')
+    #list_parser.add_argument('-j', dest='json', type=str, help="Name of the json file to choose your step file from")
+    list_parser.add_argument('step_path', type=str, help='Name of the step file to list its parts from')
+    list_parser.set_defaults(func=source.list_parts)
