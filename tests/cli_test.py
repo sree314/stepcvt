@@ -23,7 +23,10 @@ tests = {
     "Project Test 2": "stepcvt -j json.js name test",  # renaming the project from 'stepcvt' to 'test'
     "Project Test 3": "stepcvt -j json.js display",  # show the projects contents so far
     "source test": "stepcvt -j json.js add Stealthburner_Printhead_V6.stp",  # adding the source
-    "part test": "stepcvt -j json.js addpart --all",  # adding the parts
+    "part add-all test": "stepcvt -j json.js addpart --all",  # adding all parts
+    "part remove test": "stepcvt -j json.js rmpart SB_V6_TH_Rear_CW2",  # removing a part
+    "part add test": "stepcvt -j json.js addpart SB_V6_TH_Rear_CW2",  # adding a part
+    "part change count": "stepcvt -j json.js editpart SB_V6_TH_Rear_CW2 -c 2",  # changing the default count of a part
     "stl test": "stepcvt -j json.js stlconvert partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
     "export test": "stepcvt -j json.js exportstl path",  # exporting the stls
     "choices add test": "stepcvt -j json.js choices add-chooser --choice-type single 'Printer Options' 'options' "
