@@ -15,16 +15,10 @@ def _parse_values(value_strs: [str]) -> [ChoiceValue]:
             values.append(ChoiceValue(l[0], l[1], l[2:3] or None))
     except IndexError:
         raise SyntaxError("Missing required attribute in text:value[:cond] pair")
+    return values
 
 
-def choices_add(args):
-    # parse json input
-    # TODO: Project.from_dict should throw on any invalid json, this can simplify calling of from_dict function
-    with open(args.jsonfile, "r") as file:
-        project = Project.from_dict(json.load(file))
-    if not project:
-        raise SyntaxError("Error loading project config from json")
-
+def choices_add(project: Project, args):
     # parse new choice
     # split values
     values = _parse_values(args.values)
@@ -53,14 +47,7 @@ def choices_add(args):
         json.dump(project.to_dict(), file)
 
 
-def choices_edit(args):
-    # parse json input
-    with open(args.jsonfile, "r") as file:
-        project = Project.from_dict(json.load(file))
-    if not project:
-        raise SyntaxError("Error loading project config from json")
-    choices = project.available_choices
-
+def choices_edit(project: Project, args):
     # find chooser to edit
     chooser = next(filter(lambda c: c.varname == args.varname, choices), None)
     if chooser is None:
@@ -111,12 +98,7 @@ def choices_edit(args):
         json.dump(project.to_dict(), file)
 
 
-def choices_remove(args):
-    with open(args.jsonfile, "r") as file:
-        project = Project.from_dict(json.load(file))
-    if not project:
-        raise SyntaxError("Error loading project config from json")
-
+def choices_remove(project: Project, args):
     # select chooser
     chooser = next(
         filter(lambda c: c.varname == args.varname, project.available_choices.choices),
@@ -145,12 +127,7 @@ def choices_remove(args):
         json.dump(project.to_dict(), file)
 
 
-def choices_apply(args):
-    with open(args.jsonfile, "r") as file:
-        project = Project.from_dict(json.load(file))
-    if not project:
-        raise SyntaxError("Error loading project config from json")
-
+def choices_apply(project: Project, args):
     user_choices = {}
 
     for kv in args.choices_input:
