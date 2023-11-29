@@ -24,7 +24,7 @@ tests = {
     "Project Test 3": "stepcvt -j json.js display",  # show the projects contents so far
     "source test": "stepcvt -j json.js add Stealthburner_Printhead_V6.stp",  # adding the source
     "part test": "stepcvt -j json.js addpart --all",  # adding the parts
-    "stl test": "stepcvt -j json.js stlcvt partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
+    "stl test": "stepcvt -j json.js stlconvert partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
     "export test": "stepcvt -j json.js exportstl path",  # exporting the stls
     "choices add test": "stepcvt -j json.js choices add-chooser --choice-type single 'Printer Options' 'options' "
     "--values 'HEPA filter':'Filter' 'Build area lights':'Lights':'version=='V6''",  # Add a single chooser
