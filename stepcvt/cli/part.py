@@ -2,22 +2,7 @@ import json
 from ..project import *
 
 
-def add_part(args):
-    if args.jsonfile is None:
-        print("ERROR: Need to provide a jsonfile")
-        return 1
-
-    try:
-        with open(args.jsonfile, "r") as jf:
-            d = json.load(jf)
-            p = Project.from_dict(d)
-    except FileNotFoundError as fe:
-        print(f"ERROR: {args.jsonfile} doesn't exist")
-        return 1
-    except json.JSONDecodeError:
-        print("ERROR: Invalid json syntax")
-        return 1
-
+def add_part(p, args):
     if not p.sources:
         print("ERROR: No existing source, add one first")
     else:
@@ -29,8 +14,6 @@ def add_part(args):
             else:
                 for partid, obj in source.parts():
                     source.add_partinfo(partid, obj)
-                for pi in source.partinfo:
-                    pi.add_info(CountInfo())
         else:
             ids = args.id  # parts that need to be added
             if not ids:
@@ -47,30 +30,13 @@ def add_part(args):
                             print(f"{partid} has already been added")
                         else:
                             source.add_partinfo(partid, obj)
-                # for pi in source.partinfo:
-                #     pi.add_info(CountInfo())
 
     with open(args.jsonfile, "w") as jf:
         json.dump(p.to_dict(), jf)
     return 0
 
 
-def remove_part(args):
-    if args.jsonfile is None:
-        print("ERROR: Need to provide a jsonfile")
-        return 1
-
-    try:
-        with open(args.jsonfile, "r") as jf:
-            d = json.load(jf)
-            p = Project.from_dict(d)
-    except FileNotFoundError as fe:
-        print(f"ERROR: {args.jsonfile} doesn't exist")
-        return 1
-    except json.JSONDecodeError:
-        print("ERROR: Invalid json syntax")
-        return 1
-
+def remove_part(p, args):
     if not p.sources:
         print("ERROR: No existing source, add one first")
     else:
@@ -87,22 +53,7 @@ def remove_part(args):
     return 0
 
 
-def edit_part(args):
-    if args.jsonfile is None:
-        print("ERROR: Need to provide a jsonfile")
-        return 1
-
-    try:
-        with open(args.jsonfile, "r") as jf:
-            d = json.load(jf)
-            p = Project.from_dict(d)
-    except FileNotFoundError as fe:
-        print(f"ERROR: {args.jsonfile} doesn't exist")
-        return 1
-    except json.JSONDecodeError:
-        print("ERROR: Invalid json syntax")
-        return 1
-
+def edit_part(p, args):
     if not p.sources:
         print("ERROR: No existing source, add one first")
     else:

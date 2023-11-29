@@ -19,11 +19,19 @@ def test_command(command, test_name):
 
 # defining the tests
 tests = {
-    "project": "stepcvt -j json.js make test",  # making the project
-    "source": "stepcvt -j json.js add Stealthburner_Printhead_V6.stp",  # adding the source
-    "part": "stepcvt -j json.js addpart --all",  # adding the parts
-    "stl": "stepcvt -j json.js stlcvt partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
-    "export": "stepcvt -j json.js exportstl path",  # exporting the stls
+    "Project Test 1": "stepcvt -j json.js make",  # making the project
+    "Project Test 2": "stepcvt -j json.js name test",  # renaming the project from 'stepcvt' to 'test'
+    "Project Test 3": "stepcvt -j json.js display",  # show the projects contents so far
+    "source test": "stepcvt -j json.js add Stealthburner_Printhead_V6.stp",  # adding the source
+    "part test": "stepcvt -j json.js addpart --all",  # adding the parts
+    "stl test": "stepcvt -j json.js stlcvt partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
+    "export test": "stepcvt -j json.js exportstl path",  # exporting the stls
+    "choices add test": "stepcvt -j json.js choices add-chooser --choice-type single 'Printer Options' 'options' "
+    "--values 'HEPA filter':'Filter' 'Build area lights':'Lights':'version=='V6''",  # Add a single chooser
+    "choices edit test": "stepcvt choices edit 'options' --choice-value 'Lights' "
+    "'Build area lights':'Lights':'version==''V4''",  # rename one of the choice value
+    "choices remove test": "stepcvt choices remove 'options' --choice-value 'Lights' --cond",  # remove one option value
+    "choices apply test": "stepcvt choices apply Version=v6 Options=Lights,Filter",  # apply a user choice
 }
 
 # Get test name from command line argument

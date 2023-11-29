@@ -47,8 +47,10 @@ def getJSON(args, req):  # Adapted from part.py CLI code
         jfName = args.jsonfile
 
     try:
-        jf = open(jfName, "x")
-        d = json.load(jf)
+        jf = open(jfName, "r+")
+        rd = jf.read()
+        pd = json.loads(rd)
+        return pd, jf
     except FileNotFoundError as fe:
         print(f"ERROR: {args.jsonfile} doesn't exist")
         return None, None
@@ -57,9 +59,9 @@ def getJSON(args, req):  # Adapted from part.py CLI code
             print("ERROR: Invalid json syntax")
             return None, None
         else:
-            d = {"type": "Project", "name": "stepcvt", "sources": []}
-            json.dump(d, jf)
-    return d, jf
+            p = Project()
+            json.dump(p.to_dict(), jf)
+            return p.to_dict(), jf
 
 
 def make(args):

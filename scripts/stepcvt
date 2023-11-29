@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys
 
 sys.path.append("../")
@@ -28,8 +29,23 @@ if __name__ == "__main__":
     epp = sp.add_parser("editpart", help="Change part properties")
     # can only change one part at a time
     epp.add_argument("id", help="Specify partid for the part to be edited")
-    epp.add_argument("-c", "--count", type=int, help="Change the default count of the part")
+    epp.add_argument(
+        "-c", "--count", type=int, help="Change the default count of the part"
+    )
     epp.set_defaults(func=part.edit_part)
+
+    cvtp = sp.add_parser("stlconvert", help="specify how to convert to stl")
+    cvtp.add_argument("partID", help="Specify partid for parts to be added")
+    cvtp.add_argument(
+        "--rotation", type=int, nargs=3, help="3 integers for x, y, z rotation"
+    )
+    cvtp.add_argument(
+        "--linearTolerance", type=float, help="float for linear tolerance"
+    )
+    cvtp.add_argument(
+        "--angularTolerance", type=float, help="float for angular tolerance"
+    )
+    cvtp.set_defaults(func=task.stlconvert)
 
     # --- Choices ---
     p_choices = sp.add_parser("choices")
@@ -111,7 +127,9 @@ if __name__ == "__main__":
     npn.set_defaults(func=proj.newName)
 
     mnp = sp.add_parser("make", help="Build an exisitng project or new project")
-    mnp.add_argument("-n", "--name", type=str, help="Name of project if not default stepcvt.json")
+    mnp.add_argument(
+        "-n", "--name", type=str, help="Name of project if not default stepcvt.json"
+    )
     mnp.set_defaults(func=proj.make)
 
     dp = sp.add_parser("display", help="Display the contents of a project")
@@ -121,19 +139,27 @@ if __name__ == "__main__":
     # sys.exit(args.func(args))
 
     # CADSource
-    add_parser = sp.add_parser('addstep', help='Add a step file')
-    add_parser.add_argument('-j', dest='json', type=str, help='Name of the json file to add on to')
-    add_parser.add_argument('step_path', type=str, help='Path of the step file to add')
+    add_parser = sp.add_parser("addstep", help="Add a step file")
+    add_parser.add_argument(
+        "-j", dest="json", type=str, help="Name of the json file to add on to"
+    )
+    add_parser.add_argument("step_path", type=str, help="Path of the step file to add")
     add_parser.set_defaults(func=source.add_step)
 
     # removing step
-    remove_parser = sp.add_parser('rmstep', help='Remove a step file')
-    remove_parser.add_argument('-j', dest='json', type=str, help='Name of the json file to remove from')
-    remove_parser.add_argument('step_path', type=str, help='Name of the step file to remove')
+    remove_parser = sp.add_parser("rmstep", help="Remove a step file")
+    remove_parser.add_argument(
+        "-j", dest="json", type=str, help="Name of the json file to remove from"
+    )
+    remove_parser.add_argument(
+        "step_path", type=str, help="Name of the step file to remove"
+    )
     remove_parser.set_defaults(func=source.remove_step)
 
     # listing parts
-    list_parser = sp.add_parser('liststep', help='List parts of a step file')
-    #list_parser.add_argument('-j', dest='json', type=str, help="Name of the json file to choose your step file from")
-    list_parser.add_argument('step_path', type=str, help='Name of the step file to list its parts from')
+    list_parser = sp.add_parser("liststep", help="List parts of a step file")
+    # list_parser.add_argument('-j', dest='json', type=str, help="Name of the json file to choose your step file from")
+    list_parser.add_argument(
+        "step_path", type=str, help="Name of the step file to list its parts from"
+    )
     list_parser.set_defaults(func=source.list_parts)

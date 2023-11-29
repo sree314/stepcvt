@@ -120,3 +120,19 @@ def test_Project_from_file_dup(tmp_path):
 
     with pytest.raises(KeyError):
         p.add_source(name="book", path=model_file)
+
+
+def test_Project_to_dict_root(tmp_path):
+    model_file = tmp_path / "book.step"
+    book = models.book_model()
+    book.save(str(model_file))
+
+    p = Project(name="Book")
+
+    # the add source method adds a step file as a CADSource
+    # the file is added to the sources list after loading it from the stepfile.
+    # this is done by calling the CADSource.load_step_file() function
+    # the function does not return anything
+    p.add_source(name="book", path=model_file)
+
+    p.to_dict(root=tmp_path)
