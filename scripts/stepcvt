@@ -1,8 +1,38 @@
 import sys
+import json
+
+from stepcvt.project import Project
 
 sys.path.append("../")
 from stepcvt.cli import *
 import argparse
+
+# load from JSON function
+def loadFromJSON(args):
+    # check for jsonfile
+    if args.jsonfile is None:
+        print("ERROR: Need to provide a jsonfile")
+        return 1
+
+    # try to get info from jsonfile
+    try:
+        with open(args.jsonfile, "r") as jf:
+            d = json.load(jf)
+            p = Project.from_dict(d)
+            return p
+    except FileNotFoundError as fe:
+        print(f"ERROR: {args.jsonfile} doesn't exist")
+        return 1
+    except json.JSONDecodeError:
+        print("ERROR: Invalid json syntax")
+        return 1
+
+# write to JSON function
+def writeToJSON(p, args):
+    with open(args.jsonfile, "w") as jf:
+        json.dump(p.to_dict(), jf)
+    return 0
+
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="")
@@ -125,4 +155,9 @@ if __name__ == "__main__":
     dp.set_defaults(func=proj.display)
 
     args = p.parse_args()
-    sys.exit(args.func(args))
+
+    if args.__contains__("make"):
+        proj.make()
+    else:
+        p = loadFromJSON(args)
+        sys.exit(args.func(args))
