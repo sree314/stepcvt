@@ -8,6 +8,7 @@ sys.path.append("../")
 from stepcvt.cli import *
 import argparse
 
+
 # load from JSON function
 def loadFromJSON(args):
     # check for jsonfile
@@ -27,6 +28,7 @@ def loadFromJSON(args):
     except json.JSONDecodeError:
         print("ERROR: Invalid json syntax")
         return 1
+
 
 # write to JSON function
 def writeToJSON(p, args):
@@ -165,8 +167,6 @@ if __name__ == "__main__":
     dp = sp.add_parser("display", help="Display the contents of a project")
     dp.set_defaults(func=proj.display)
 
-    args = p.parse_args()
-
     # CADSource
     add_parser = sp.add_parser("addstep", help="Add a step file")
     add_parser.add_argument("step_path", type=str, help="Path of the step file to add")
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     # Dispatch
     args = p.parse_args()
     if args.__contains__("make"):
-        proj.make()
+        proj.make(args)
     else:
         p = loadFromJSON(args)
         sys.exit(args.func(p, args))
