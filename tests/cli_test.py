@@ -16,9 +16,10 @@ def test_command(command, test_name):
     success, output = run_command(command)
     if not success:
         print(f"Failed: {test_name}\nOutput:\n{output}\n")
-        sys.exit(1)
+        return False
     else:
         print(f"Passed: {test_name}\nOutput:\n{output}\n")
+        return True
 
 
 # defining the tests
@@ -32,22 +33,19 @@ tests = {
     "stl test": "python ./scripts/stepcvt -j json.js stlcvt partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
     "export test": "python ./scripts/stepcvt -j json.js exportstl path",  # exporting the stls
     "choices add test": "python ./scripts/stepcvt -j json.js choices add-chooser --choice-type single 'Printer Options' 'options' "
-    "--values 'HEPA filter':'Filter' 'Build area lights':'Lights':'version=='V6''",  # Add a single chooser
+    "'HEPA filter':'Filter' 'Build area lights':'Lights':'version=='V6''",  # Add a single chooser
     "choices edit test": "python ./scripts/stepcvt choices edit 'options' --choice-value 'Lights' "
     "'Build area lights':'Lights':'version==''V4''",  # rename one of the choice value
     "choices remove test": "python ./scripts/stepcvt choices remove 'options' --choice-value 'Lights' --cond",  # remove one option value
-    "choices apply test": "python ./scripts/stepcvt choices apply Version=v6 Options=Lights,Filter",  # apply a user choice
+    "choices apply test": "python ./scripts/stepcvt choices apply options=Lights,Filter",  # apply a user choice
 }
 
-# Get test name from command line argument
-test_name = sys.argv[1] if len(sys.argv) > 1 else None
+all_tests_passed = True
 
-# run something like: python cli_test.py "Project Test 1" if you only want to look at project test
-if test_name:
-    if test_name in tests:
-        test_command(tests[test_name], test_name)
-    else:
-        print(f"Test '{test_name}' not found.")
-else:
-    for name, command in tests.items():
-        test_command(command, name)
+for name, command in tests.items():
+    test_passed = test_command(command, name)
+    if not test_passed:
+        all_tests_passed = False
+
+if not all_tests_passed:
+    sys.exit(1)  # Exit with a non-zero status code if any test failed
