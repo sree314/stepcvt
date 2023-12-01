@@ -39,7 +39,13 @@ def writeToJSON(p, args):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="")
-    p.add_argument("-j", dest="jsonfile", type=str, help="Provide the jsonfile")
+    p.add_argument(
+        "-j",
+        dest="jsonfile",
+        type=str,
+        help="Provide the jsonfile",
+        default="stepcvt.json",
+    )
     sp = p.add_subparsers(dest="command")
 
     # --- Part ---
@@ -187,10 +193,12 @@ if __name__ == "__main__":
 
     # Dispatch
     args = p.parse_args()
-    if args.__contains__("make"):
-        proj.make(args)
+    if args.command == "make":
+        writeToJSON(proj.make(args), args)
     else:
         p = loadFromJSON(args)
         if p == 1:
             sys.exit(1)
-        sys.exit(args.func(p, args))
+        save = args.func(p, args)
+        if save:
+            writeToJSON(p, args)

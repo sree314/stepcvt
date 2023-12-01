@@ -38,52 +38,18 @@ import json
 from ..project import *
 
 
-def getJSON(args, req):  # Adapted from part.py CLI code
-    # req = True means the file oppened must be a valid json
-    # req = False means the file can be init if empty
-    if args.jsonfile is None:
-        jfName = "stepcvt.json"
-    else:
-        jfName = args.jsonfile
-
-    try:
-        jf = open(jfName, "r+")
-        rd = jf.read()
-        pd = json.loads(rd)
-        return pd, jf
-    except FileNotFoundError as fe:
-        print(f"ERROR: {args.jsonfile} doesn't exist")
-        return None, None
-    except json.JSONDecodeError:
-        if req:
-            print("ERROR: Invalid json syntax")
-            return None, None
-        else:
-            p = Project()
-            json.dump(p.to_dict(), jf)
-            return p.to_dict(), jf
-
-
 def make(args):
-    data, jf = getJSON(args, False)
-    p = Project.from_dict(data)
+    p = Project()
     if args.name:
         p.name = args.name
-    jf.close()
+    return p
 
 
-def display(args):
-    data, jf = getJSON(args, True)
-    if data is None:
-        return False
+def display(p, args):
+    data = p.to_dict()
     print(data)
-    jf.close()
 
 
-def newName(args):
-    data, jf = getJSON(args, True)
-    if data is None:
-        return False
-    p = Project.from_dict(data)
+def newName(p, args):
     p.name = args.name
-    jf.close()
+    return 1

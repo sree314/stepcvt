@@ -15,7 +15,7 @@ import OCP
 class Project:
     def __init__(
         self,
-        name: str = "",
+        name: str = "stepcvt",
         sources: list = None,
         available_choices: choices.Choices = None,
     ):
