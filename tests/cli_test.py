@@ -14,7 +14,11 @@ def run_command(command):
 
 def test_command(command, test_name):
     success, output = run_command(command)
-    print(f"{'Passed' if success else 'Failed'}: {test_name}\nOutput:\n{output}\n")
+    if not success:
+        print(f"Failed: {test_name}\nOutput:\n{output}\n")
+        sys.exit(1)
+    else:
+        print(f"Passed: {test_name}\nOutput:\n{output}\n")
 
 
 # defining the tests
