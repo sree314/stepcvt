@@ -1,27 +1,9 @@
 import json
 from stepcvt import project
-import stepcvt
 from ..project import *
 
 
 def stlconvert(p, args):
-    # check for jsonfile
-    if args.jsonfile is None:
-        print("ERROR: Need to provide a jsonfile")
-        return 1
-
-    # try to get info from jsonfile
-    try:
-        with open(args.jsonfile, "r") as jf:
-            d = json.load(jf)
-            p = Project.from_dict(d)
-    except FileNotFoundError as fe:
-        print(f"ERROR: {args.jsonfile} doesn't exist")
-        return 1
-    except json.JSONDecodeError:
-        print("ERROR: Invalid json syntax")
-        return 1
-
     if not p.sources:
         print("ERROR: No existing source, add one first")
     else:
@@ -62,8 +44,4 @@ def stlconvert(p, args):
                         angularTolerance=angularTol,
                     )
                 )
-
-    stepcvt.writeToJSON()
-    # with open(args.jsonfile, "w") as jf:
-    #     json.dump(project.to_dict(), jf)
-    # return 0
+    return 1
