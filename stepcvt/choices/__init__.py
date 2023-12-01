@@ -1,6 +1,6 @@
 import ast
 from functools import reduce
-from typing import Dict, Type
+from typing import Dict, Type, Union
 
 
 class UserChoices:
@@ -242,13 +242,15 @@ class Chooser:
 class ChoiceValue:
     """Represents a value available for a choice."""
 
-    def __init__(self, text: str, value: str, cond: ChoiceExpr = None):
+    def __init__(self, text: str, value: str, cond: Union[ChoiceExpr, str] = None):
         self.text = text
         self.value = value
 
         # if this is not None, then it represents a value
         # which is only available if the condition is true.
         self.cond = cond
+        if type(cond) is str:
+            self.cond = ChoiceExpr(cond)
 
     @classmethod
     def from_dict(cls, d):

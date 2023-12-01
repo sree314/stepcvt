@@ -58,7 +58,7 @@ class Project:
 
         available_choices = None
         if "available_choices" in d:
-            available_choices = choices.Choices(d["available_choices"])
+            available_choices = choices.Choices.from_dict(d["available_choices"])
 
         p = cls(d["name"], s, available_choices)
         if "user_choices" in d:
@@ -334,24 +334,31 @@ class PartInfo:
             info.append(info_type.from_dict(info_dict))
 
         effect: [choices.ChoiceEffect] = []
-        for effect_dict in d["choice_effect"]:
-            t: Type[choices.ChoiceEffect] = choices.ChoiceEffect.gettype(
-                effect_dict["type"]
-            )
-            effect.append(t.from_dict(effect_dict))
+        if "choice_effect" in d:
+            for effect_dict in d["choice_effect"]:
+                t: Type[choices.ChoiceEffect] = choices.ChoiceEffect.gettype(
+                    effect_dict["type"]
+                )
+                effect.append(t.from_dict(effect_dict))
 
         p = cls(
             part_id,
             info,
             None,
-            d["default_selected"],
-            d["default_count"],
-            d["default_scale"],
-            effect,
+            choice_effect=effect,
         )
-        p.count = d["count"]
-        p.scale = d["scale"]
-        p.selected = d["selected"]
+        if "default_selected" in d:
+            p._default_selected = d["default_selected"]
+        if "default_count" in d:
+            p._default_count = d["default_count"]
+        if "default_scale" in d:
+            p._default_scale = d["default_scale"]
+        if "count" in d:
+            p.count = d["count"]
+        if "scale" in d:
+            p.scale = d["scale"]
+        if "selected" in d:
+            p.selected = d["selected"]
         return p
 
     def to_dict(self):
