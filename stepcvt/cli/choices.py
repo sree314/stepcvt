@@ -43,13 +43,15 @@ def choices_add(project: Project, args):
             )
     # theoretically no other values should appear
 
-    with open(args.jsonfile, "w") as file:
-        json.dump(project.to_dict(), file)
+    return 1
 
 
 def choices_edit(project: Project, args):
     # find chooser to edit
-    chooser = next(filter(lambda c: c.varname == args.varname, choices), None)
+    chooser = next(
+        filter(lambda c: c.varname == args.varname, project.available_choices.choices),
+        None,
+    )
     if chooser is None:
         raise SyntaxError(f"Chooser {args.varname} not found in provided project file")
 
@@ -68,7 +70,7 @@ def choices_edit(project: Project, args):
                 )
         else:
             cv = next(
-                filter(lambda v: v.text == args.choice_value, chooser.values), None
+                filter(lambda v: v.value == args.choice_value, chooser.values), None
             )
         # replace specific ChoiceValue
         if len(values) > 1:
@@ -94,8 +96,7 @@ def choices_edit(project: Project, args):
         # replace entire ChoiceValue list
         chooser.values = _parse_values(values)
 
-    with open(args.jsonfile, "w") as file:
-        json.dump(project.to_dict(), file)
+    return 1
 
 
 def choices_remove(project: Project, args):
@@ -123,8 +124,7 @@ def choices_remove(project: Project, args):
     # select cond
     cv.cond = None
 
-    with open(args.jsonfile, "w") as file:
-        json.dump(project.to_dict(), file)
+    return 1
 
 
 def choices_apply(project: Project, args):
@@ -133,8 +133,9 @@ def choices_apply(project: Project, args):
     for kv in args.choices_input:
         k, v = kv.split("=", maxsplit=2)
         user_choices[k] = v.split(",")
+        if len(user_choices[k]) == 1:
+            user_choices[k] = user_choices[k][0]
 
     project.accept_user_choices(UserChoices(user_choices))
 
-    with open(args.jsonfile, "w") as file:
-        json.dump(project.to_dict(), file)
+    return 1
