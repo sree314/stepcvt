@@ -48,6 +48,10 @@ class Project:
                     raise KeyError("Cannot add source that already exists")
         self.sources.append(CADSource.load_step_file(name, path))
 
+    def load(self, path):
+        for cs in self.sources:
+            cs.load(path)
+
     @classmethod
     def from_dict(cls, d):
         s = None
