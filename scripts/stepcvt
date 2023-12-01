@@ -33,7 +33,7 @@ def loadFromJSON(args):
 # write to JSON function
 def writeToJSON(p, args):
     with open(args.jsonfile, "w") as jf:
-        json.dump(p.to_dict(), jf)
+        json.dump(p.to_dict(), jf, indent="  ")
     return 0
 
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # stepcvt choices add-chooser [--choices-type TYPE] TEXT VARNAME (TEXT:VARNAME[:COND])+
     # example:
     # stepcvt choices add-chooser --choice-type single "Printer Options" "options"
-    #   --values "HEPA filter":"Filter" "Build area lights":"Lights":"version=='V6'"
+    #   "HEPA filter":"Filter" "Build area lights":"Lights":"version=='V6'"
     subp_choices = p_choices.add_subparsers(help="actions on choices")
     subp_choices_add = subp_choices.add_parser("add-chooser", help="create a choice")
     subp_choices_add.set_defaults(func=choices.choices_add)
@@ -144,13 +144,16 @@ if __name__ == "__main__":
         "--choice-value", help="specify a choice value to in the chooser to be removed"
     )
     subp_choices_remove.add_argument(
-        "--cond", help="remove the condition part of a choice value"
+        "--cond",
+        action="store_true",
+        help="remove the condition part of a choice value",
     )
 
     # stepcvt choices apply (VARNAME=VALUE(,EXTRA_VALUES)*)+
     # example:
     # stepcvt choices apply Version=v6 Options=Lights,Filter
     subp_choices_apply = subp_choices.add_parser("apply", help="apply user choice to ")
+    subp_choices_apply.set_defaults(func=choices.choices_apply)
     subp_choices_apply.add_argument(
         "choices_input",
         nargs="+",

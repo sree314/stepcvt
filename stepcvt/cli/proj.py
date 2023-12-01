@@ -46,6 +46,7 @@ def make(args):
 
 
 def display(p, args):
+    # Add better formatting
     data = p.to_dict()
     print(data)
 

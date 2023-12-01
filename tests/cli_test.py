@@ -33,11 +33,11 @@ tests = {
     "stl test": "python ./scripts/stepcvt -j json.js stlcvt partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
     "export test": "python ./scripts/stepcvt -j json.js exportstl path",  # exporting the stls
     "choices add test": "python ./scripts/stepcvt -j json.js choices add-chooser --choice-type single 'Printer Options' 'options' "
-    "--values 'HEPA filter':'Filter' 'Build area lights':'Lights':'version=='V6''",  # Add a single chooser
+    "'HEPA filter':'Filter' 'Build area lights':'Lights':'version=='V6''",  # Add a single chooser
     "choices edit test": "python ./scripts/stepcvt choices edit 'options' --choice-value 'Lights' "
     "'Build area lights':'Lights':'version==''V4''",  # rename one of the choice value
     "choices remove test": "python ./scripts/stepcvt choices remove 'options' --choice-value 'Lights' --cond",  # remove one option value
-    "choices apply test": "python ./scripts/stepcvt choices apply Version=v6 Options=Lights,Filter",  # apply a user choice
+    "choices apply test": "python ./scripts/stepcvt choices apply options=Lights,Filter",  # apply a user choice
 }
 
 all_tests_passed = True
