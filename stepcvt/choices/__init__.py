@@ -1,6 +1,6 @@
 import ast
 from functools import reduce
-from typing import Dict
+from typing import Dict, Type
 
 
 class UserChoices:
@@ -21,6 +21,13 @@ class UserChoices:
 
     def __init__(self, key_vals: dict):
         self.choices = key_vals
+
+    def to_dict(self):
+        return self.choices
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(d)
 
 
 class ChoiceExpr:
@@ -82,9 +89,9 @@ class ChoiceExpr:
             ChoiceExpr.sanitize_ast(node.left)
             ChoiceExpr.sanitize_ast(node.right)
         elif isinstance(node, ast.IfExp):
-            ChoiceEffect.sanitize_ast(node.test)
-            ChoiceEffect.sanitize_ast(node.body)
-            ChoiceEffect.sanitize_ast(node.orelse)
+            ChoiceExpr.sanitize_ast(node.test)
+            ChoiceExpr.sanitize_ast(node.body)
+            ChoiceExpr.sanitize_ast(node.orelse)
         elif type(node) in {ast.Name, ast.Constant}:
             return
         else:
@@ -96,7 +103,6 @@ class ChoiceExpr:
         # extract dict items into assignment
         # as scope context for evaluating expr
         scope = "(lambda "
-        print(user_choices.choices)
         for key, value in user_choices.choices.items():
             if isinstance(value, str):
                 value = f"'{value}'"
@@ -108,6 +114,13 @@ class ChoiceExpr:
         """Returns the variables in the expression"""
         return ChoiceExpr.extract_ast_vars(ast.parse(self.expr, mode="eval"))
 
+    @classmethod
+    def from_dict(cls, s):
+        return cls(s)
+
+    def to_dict(self):
+        return self.expr
+
 
 class ChoiceEffect:
     """The base class for the effect on a part that is choice-dependent.
@@ -117,6 +130,14 @@ class ChoiceEffect:
     def __init__(self, cond: ChoiceExpr, *args, **kwargs):
         self.cond = cond
 
+    @classmethod
+    def gettype(cls, type_name):
+        """Return one of the subtypes given by the name"""
+        for t in cls.__subclasses__():
+            if t.__name__ == type_name:
+                return t
+        raise TypeError(f"{type_name} is not a valid ChoiceEffect type")
+
 
 class SelectionEffect(ChoiceEffect):
     """Represents a yes/no choice for a part. If the condition evaluates
@@ -124,7 +145,12 @@ class SelectionEffect(ChoiceEffect):
 
     """
 
-    pass
+    @classmethod
+    def from_dict(cls, d):
+        return cls(ChoiceExpr.from_dict(d["cond"]))
+
+    def to_dict(self):
+        return {"type": self.__class__.__name__, "cond": self.cond.to_dict()}
 
 
 class RelativeCountEffect(ChoiceEffect):
@@ -137,6 +163,17 @@ class RelativeCountEffect(ChoiceEffect):
         self.count_delta = count_delta
         super().__init__(cond, *args, **kwargs)
 
+    @classmethod
+    def from_dict(cls, d):
+        return cls(ChoiceExpr.from_dict(d["cond"]), d["count_delta"])
+
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "cond": self.cond.to_dict(),
+            "count_delta": self.count_delta,
+        }
+
 
 class AbsoluteCountEffect(ChoiceEffect):
     """Changes the count for a part depending on a choice. This models an
@@ -147,6 +184,17 @@ class AbsoluteCountEffect(ChoiceEffect):
     def __init__(self, cond: ChoiceExpr, count, *args, **kwargs):
         self.count = count
         super().__init__(cond, *args, **kwargs)
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(ChoiceExpr.from_dict(d["cond"]), d["count"])
+
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "cond": self.cond.to_dict(),
+            "count": self.count,
+        }
 
 
 class ScaleEffect(ChoiceEffect):
@@ -160,6 +208,17 @@ class ScaleEffect(ChoiceEffect):
         self.scale = scale
         super().__init__(cond, *args, **kwargs)
 
+    @classmethod
+    def from_dict(cls, d):
+        return cls(ChoiceExpr.from_dict(d["cond"]), d["scale"])
+
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "cond": self.cond.to_dict(),
+            "scale": self.scale,
+        }
+
 
 class Chooser:
     """Base class for a choice. This also corresponds to the UI shown for
@@ -168,6 +227,16 @@ class Chooser:
     def __init__(self, text: str, varname: str) -> None:
         self.text = text  # human-readable text
         self.varname = varname  # variable name
+
+    @classmethod
+    def gettype(cls, typename) -> Type["Chooser"]:
+        for t in cls.__subclasses__():
+            if t.__name__ == typename:
+                return t
+        raise TypeError(f"{typename} is not a valid Chooser type")
+
+    def to_dict(self):
+        raise NotImplementedError("Don't call this method on parent class")
 
 
 class ChoiceValue:
@@ -180,6 +249,23 @@ class ChoiceValue:
         # if this is not None, then it represents a value
         # which is only available if the condition is true.
         self.cond = cond
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(
+            d["text"],
+            d["value"],
+            ChoiceExpr.from_dict(d["cond"]) if "cond" in d else None,
+        )
+
+    def to_dict(self):
+        d = {
+            "text": self.text,
+            "value": self.value,
+        }
+        if self.cond:
+            d["cond"] = self.cond.to_dict()
+        return d
 
 
 class SingleChooser(Chooser):
@@ -195,6 +281,20 @@ class SingleChooser(Chooser):
         self.values = values
         super().__init__(text, varname)
 
+    @classmethod
+    def from_dict(cls, d):
+        return cls(
+            d["text"], d["varname"], [ChoiceValue.from_dict(x) for x in d["values"]]
+        )
+
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "text": self.text,
+            "varname": self.varname,
+            "values": [v.to_dict() for v in self.values],
+        }
+
 
 class MultiChooser(Chooser):
     """Represents a choice where multiple values can be selected from a
@@ -206,6 +306,20 @@ class MultiChooser(Chooser):
     def __init__(self, text: str, varname: str, values: [ChoiceValue]):
         self.values = values
         super().__init__(text, varname)
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(
+            d["text"], d["varname"], [ChoiceValue.from_dict(x) for x in d["values"]]
+        )
+
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "text": self.text,
+            "varname": self.varname,
+            "values": [v.to_dict() for v in self.values],
+        }
 
 
 class BooleanChooser(Chooser):
@@ -221,6 +335,19 @@ class BooleanChooser(Chooser):
         self.sel_value = sel_value
         self.unsel_value = unsel_value
         super().__init__(text, varname)
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(d["text"], d["varname"], d["sel_value"], d["unsel_value"])
+
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "text": self.text,
+            "varname": self.varname,
+            "sel_value": self.sel_value,
+            "unsel_value": self.unsel_value,
+        }
 
 
 class Choices:
@@ -259,14 +386,14 @@ class Choices:
             values = filter(lambda v, val=val: v.value in val, values)
             # test if all preconditions for values in such set are satisfied
             for value in values:
-                print(value.value)
                 if value.cond is not None and not value.cond.eval(valid_user_choices):
                     raise AttributeError(
                         f"Precondition for '{value.value}' not satisfied"
                     )
 
     def to_simple_dict(self) -> Dict[str, set]:
-        """Serialize simplified available choices as dict,
+        """Serialize available choices as dict,
+        preserving only varname -> value, i.e. no text and cond,
         list is converted to set for better membership testing"""
         d = dict()
         for chooser in self.toposort():
@@ -277,9 +404,12 @@ class Choices:
             )
         return d
 
-    def to_dict(self) -> [dict]:
-        """Differs from to_simple_dict in that this method returns the full serialization"""
+    def to_dict(self):
         return [c.to_dict() for c in self.choices]
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls([Chooser.gettype(c["type"]).from_dict(c) for c in d])
 
     def toposort(self):
         # returns a topological ordering of choices
