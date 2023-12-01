@@ -2,9 +2,8 @@
 import sys
 import json
 
-from stepcvt.project import Project
-
 sys.path.append("../")
+from stepcvt.project import Project
 from stepcvt.cli import *
 import argparse
 
