@@ -231,7 +231,7 @@ class Choices:
 
     def validate(self, user_choices: UserChoices):
         """Test validity of user choices input"""
-        avail_choices_dict = self.to_dict()
+        avail_choices_dict = self.to_simple_dict()
         valid_user_choices = UserChoices(dict())
         for key, val in user_choices.choices.items():
             # test valid option
@@ -265,8 +265,8 @@ class Choices:
                         f"Precondition for '{value.value}' not satisfied"
                     )
 
-    def to_dict(self) -> Dict[str, set]:
-        """Serialize available choices as dict,
+    def to_simple_dict(self) -> Dict[str, set]:
+        """Serialize simplified available choices as dict,
         list is converted to set for better membership testing"""
         d = dict()
         for chooser in self.toposort():
@@ -276,6 +276,10 @@ class Choices:
                 else set(ch_v.value for ch_v in chooser.values)
             )
         return d
+
+    def to_dict(self) -> [dict]:
+        """Differs from to_simple_dict in that this method returns the full serialization"""
+        return [c.to_dict() for c in self.choices]
 
     def toposort(self):
         # returns a topological ordering of choices

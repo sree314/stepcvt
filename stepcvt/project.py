@@ -30,7 +30,16 @@ class Project:
         s = []
         for cd in self.sources:
             s.append(CADSource.to_dict(cd, root=root))
-        return {"type": "Project", "name": self.name, "sources": s}
+        d = {
+            "type": "Project",
+            "name": self.name,
+            "sources": s,
+        }
+        if len(self.available_choices.choices) != 0:
+            d["available_choices"] = self.available_choices.to_dict()
+        if len(self.user_choices.choices) != 0:
+            d["user_choices"] = self.user_choices.choices
+        return d
 
     def add_source(self, name: str, path: Path):
         if self.sources:
@@ -41,13 +50,20 @@ class Project:
 
     @classmethod
     def from_dict(cls, d):
+        s = None
         if "sources" in d:
             s = []
             for cd in d["sources"]:
                 s.append(CADSource.from_dict(cd))
-            return cls(d["name"], s)
-        else:
-            return cls(d["name"])
+
+        available_choices = None
+        if "available_choices" in d:
+            available_choices = choices.Choices(d["available_choices"])
+
+        p = cls(d["name"], s, available_choices)
+        if "user_choices" in d:
+            p.user_choices.choices = d["user_choices"]
+        return p
 
     def accept_user_choices(self, user_choices: choices.UserChoices):
         # validate user choices
