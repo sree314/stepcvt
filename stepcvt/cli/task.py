@@ -1,9 +1,10 @@
 import json
 from stepcvt import project
+import stepcvt
 from ..project import *
 
 
-def stlconvert(args):
+def stlconvert(p, args):
     # check for jsonfile
     if args.jsonfile is None:
         print("ERROR: Need to provide a jsonfile")
@@ -62,6 +63,7 @@ def stlconvert(args):
                     )
                 )
 
-    with open(args.jsonfile, "w") as jf:
-        json.dump(project.to_dict(), jf)
-    return 0
+    stepcvt.writeToJSON()
+    # with open(args.jsonfile, "w") as jf:
+    #     json.dump(project.to_dict(), jf)
+    # return 0

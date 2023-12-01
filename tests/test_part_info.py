@@ -4,6 +4,12 @@ import models
 pinfo = {
     "type": "PartInfo",
     "part_id": "some.step.file.identifier.or.name",
+    "default_count": 1,
+    "default_scale": 1,
+    "default_selected": True,
+    "count": 1,
+    "scale": 1,
+    "selected": True,
     "info": [
         {
             "type": "STLConversionInfo",
@@ -17,6 +23,9 @@ pinfo = {
             "slicer": "Cura",
             "settings": {"layerHeight": "0.2mm", "infillDensity": 0.4},
         },
+    ],
+    "choice_effect": [
+        {"type": "RelativeCountEffect", "cond": "'Filter' in Options", "count_delta": 1}
     ],
 }
 
@@ -55,6 +64,10 @@ def test_PartInfo_from_dict():
     sli = pi.info[2]
     assert sli.slicer == pinfo["info"][2]["slicer"]
     assert sli.settings == pinfo["info"][2]["settings"]
+
+
+def test_PartInfo_to_from_dict():
+    assert PartInfo.from_dict(pinfo).to_dict() == pinfo
 
 
 def test_PartInfo_from_part():

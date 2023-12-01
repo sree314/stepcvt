@@ -12,7 +12,7 @@ def _parse_values(value_strs: [str]) -> [ChoiceValue]:
     try:
         for kv in value_strs:
             l = kv.split(":", maxsplit=3)
-            values.append(ChoiceValue(l[0], l[1], l[2:3] or None))
+            values.append(ChoiceValue(l[0], l[1], (l[2:3] or [None])[0]))
     except IndexError:
         raise SyntaxError("Missing required attribute in text:value[:cond] pair")
     return values
