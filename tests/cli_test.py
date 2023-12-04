@@ -27,7 +27,7 @@ tests = {
     "Project Test 1": "python ./scripts/stepcvt -j json.js make",  # making the project
     "Project Test 2": "python ./scripts/stepcvt -j json.js name test",  # renaming the project from 'stepcvt' to 'test'
     "Project Test 3": "python ./scripts/stepcvt -j json.js display",  # show the projects contents so far
-    "source test": "python ./scripts/stepcvt -j json.js addstep scripts\Stealthburner_Printhead_V6.stp",  # adding the source
+    "source test": "python ./scripts/stepcvt -j json.js addstep stealth_burner_head scripts\Stealthburner_Printhead_V6.stp",  # adding the source
     "source list": "python ./scripts/stepcvt -j json.js liststep scripts\Stealthburner_Printhead_V6.stp",  # lising step parts
     "part test": "python ./scripts/stepcvt -j json.js addpart --all",  # adding the parts
     "stl test": "python ./scripts/stepcvt -j json.js stlcvt partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
