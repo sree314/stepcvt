@@ -48,7 +48,7 @@ def make(args):
 def display(p, args):
     # Add better formatting
     data = p.to_dict()
-    print(data)
+    print(json.dumps(data, indent=4))
 
 
 def newName(p, args):
