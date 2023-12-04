@@ -10,6 +10,7 @@ def check_source(p):
 def add_part(p, args):
     check_source(p)
     source = p.sources[0]
+    print(source.path)
 
     if args.all == True:  # add all parts
         if source.partinfo:  # not empty
@@ -42,11 +43,13 @@ def remove_part(p, args):
     check_source(p)
     source = p.sources[0]
     spi = source.partinfo
+    spi_copy = spi.copy()
     rids = set(args.id)  # parts that need to be removed
 
-    for pi in spi:
+    for pi in spi_copy:
         if pi.part_id in rids:
             spi.remove(pi)
+            print(f"{pi.part_id} has been removed.")
     return 1
 
 
