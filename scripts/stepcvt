@@ -175,7 +175,9 @@ if __name__ == "__main__":
     dp.set_defaults(func=proj.display)
 
     # CADSource
+    # adding step
     add_parser = sp.add_parser("addstep", help="Add a step file")
+    add_parser.add_argument("step_name", type=str, help="Name of the step file to add")
     add_parser.add_argument("step_path", type=str, help="Path of the step file to add")
     add_parser.set_defaults(func=source.add_step)
 
@@ -189,7 +191,7 @@ if __name__ == "__main__":
     # listing parts
     list_parser = sp.add_parser("liststep", help="List parts of a step file")
     list_parser.add_argument(
-        "step_path", type=str, help="Name of the step file to list its parts from"
+        "step_path", type=str, help="Path of the step file to list its parts from"
     )
     list_parser.set_defaults(func=source.list_parts)
 
