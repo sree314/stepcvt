@@ -13,9 +13,9 @@ def add_step(p, args):
     else:
         print(f"Adding step file: {args.step_path} to {args.jsonfile}.")
         stepfile = Path(args.step_path)
-        cs = CADSource(name="test", path=stepfile)
-        p.add_source(cs, args.step_name, args.step_path)
-        cs.load_step_file()
+        cs = CADSource(name=args.step_name, path=stepfile)
+        p.add_source(args.step_name, stepfile)
+        cs.load_step_file(args.step_name, stepfile)
         try:
             with open(args.jsonfile, "w") as j:
                 info = cs.to_dict()
@@ -37,8 +37,7 @@ def list_parts(p, args):
     if args.step_path is None:
         print("Missing path to step file")
     else:
-        print(f"Listing parts of step file: {args.step_name}")
-        stepfile = Path(args.step_path)
-        cs = CADSource(name="temp", path=stepfile)
+        print(f"Listing parts of step file: {args.step_path}")
+        cs = p.sources[0]
         for partid, _ in cs.parts():
             print(partid)
