@@ -46,6 +46,33 @@ def choices_add(project: Project, args):
     return 1
 
 
+def choices_effect(project: Project, args):
+    # find specified partid
+    part = None
+    for source in project.sources:
+        for p in source.partinfo:
+            if p.part_id == args.partid:
+                part = p
+                break
+    if not part:
+        raise AttributeError(
+            f"Cannot find partid {args.partid} in provided project config"
+        )
+
+    # create choice effect
+    if args.type == "select":
+        effect = SelectionEffect(args.cond)
+    elif args.type == "relative-count":
+        effect = RelativeCountEffect(args.cond, args.value)
+    elif args.type == "absolute-count":
+        effect = AbsoluteCountEffect(args.cond, args.value)
+    else:
+        raise AttributeError(f"Unknown choice effect type {args.type}")
+
+    part.choice_effect.append(effect)
+    return 1
+
+
 def choices_edit(project: Project, args):
     # find chooser to edit
     chooser = next(

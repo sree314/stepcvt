@@ -109,6 +109,33 @@ if __name__ == "__main__":
         "use [sel_value, unsel_value] for boolean chooser",
     )
 
+    # stepcvt choices add-effect --partid PARTID --type TYPE [--value VALUE] --cond COND
+    # exmaple:
+    # stepcvt choiecs add-effect --partid SB_V6_TH_Front --type relative-count --value version=='V6' --cond 2
+    subp_choices_effect = subp_choices.add_parser(
+        "add-effect", help="add a choice effect to a part"
+    )
+    subp_choices_effect.set_defaults(func=choices.choices_effect)
+    subp_choices_effect.add_argument(
+        "--partid",
+        required=True,
+        help="specify part id of the part to add choice effect",
+    )
+    subp_choices_effect.add_argument(
+        "--type",
+        required=True,
+        choices=["select", "relative-count", "absolute-count"],
+        help="type of choice effect",
+    )
+    subp_choices_effect.add_argument(
+        "--value",
+        required=len({"relative-count", "absolute-count"} & set(sys.argv)) > 0,
+        help="value provided for the choice effect, not required for select effect",
+    )
+    subp_choices_effect.add_argument(
+        "--cond", required=True, help="condition for the choice to take effect"
+    )
+
     # stepcvt choices edit VARNAME [--choice-value TEXT] (TEXT:VARNAME[:COND])+
     # example:
     # stepcvt choices edit "options" --choice-value "Lights" "Build area lights":"Lights":"version=='V4'"

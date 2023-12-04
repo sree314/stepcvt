@@ -127,8 +127,11 @@ class ChoiceEffect:
 
     Each subclass of this class is attached to a PartInfo"""
 
-    def __init__(self, cond: ChoiceExpr, *args, **kwargs):
-        self.cond = cond
+    def __init__(self, cond: Union[str, ChoiceExpr], *args, **kwargs):
+        if type(cond) is str:
+            self.cond = ChoiceExpr(cond)
+        else:
+            self.cond = cond
 
     @classmethod
     def gettype(cls, type_name):
