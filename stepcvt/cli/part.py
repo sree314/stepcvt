@@ -10,7 +10,6 @@ def check_source(p):
 def add_part(p, args):
     check_source(p)
     source = p.sources[0]
-    print(source.path)
 
     if args.all == True:  # add all parts
         if source.partinfo:  # not empty
