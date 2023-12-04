@@ -94,7 +94,7 @@ if __name__ == "__main__":
     subp_choices_add = subp_choices.add_parser("add-chooser", help="create a choice")
     subp_choices_add.set_defaults(func=choices.choices_add)
     subp_choices_add.add_argument(
-        "--choice-type",
+        "--type",
         choices=["single", "multi", "boolean"],
         default="single",
         help="chooser type",

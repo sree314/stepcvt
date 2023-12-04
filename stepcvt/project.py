@@ -9,7 +9,6 @@ from pathlib import Path, PurePath
 from typing import Type
 from stepcvt import stepreader, choices
 import cadquery as cq
-import OCP
 
 
 class Project:

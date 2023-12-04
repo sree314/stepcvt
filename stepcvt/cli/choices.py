@@ -1,4 +1,3 @@
-import json
 import sys
 
 from stepcvt.choices import *
@@ -63,13 +62,13 @@ def choices_effect(project: Project, args):
     if args.type == "select":
         effect = SelectionEffect(args.cond)
     elif args.type == "relative-count":
-        effect = RelativeCountEffect(args.cond, args.value)
+        effect = RelativeCountEffect(args.cond, int(args.value))
     elif args.type == "absolute-count":
-        effect = AbsoluteCountEffect(args.cond, args.value)
+        effect = AbsoluteCountEffect(args.cond, int(args.value))
     else:
         raise AttributeError(f"Unknown choice effect type {args.type}")
 
-    part.choice_effect.append(effect)
+    part.choice_effects.append(effect)
     return 1
 
 
@@ -117,7 +116,7 @@ def choices_edit(project: Project, args):
                     f"Choice value {args.choice_value} not found in chooser {args.varname}"
                 )
         cv.text = value.text
-        cv.vlaue = value.value
+        cv.value = value.value
         cv.cond = value.cond
     else:
         # replace entire ChoiceValue list
@@ -162,6 +161,9 @@ def choices_apply(project: Project, args):
         user_choices[k] = v.split(",")
         if len(user_choices[k]) == 1:
             user_choices[k] = user_choices[k][0]
+        # unwrap if already surrounded by quotes
+        if user_choices[k][0] in {'"', "'"} and user_choices[k][-1] in {'"', "'"}:
+            user_choices[k] = user_choices[k][1:-1]
 
     project.accept_user_choices(UserChoices(user_choices))
 
