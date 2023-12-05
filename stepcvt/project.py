@@ -10,6 +10,7 @@ from typing import Type
 from stepcvt import stepreader, choices
 import cadquery as cq
 import OCP
+import json
 
 
 class Project:
@@ -50,7 +51,7 @@ class Project:
 
     def load(self, path):
         for cs in self.sources:
-            cs.load(path)
+            cs.load()
 
     @classmethod
     def from_dict(cls, d):
@@ -158,6 +159,11 @@ class CADSource:
         partinfo = [PartInfo.from_dict(pi) for pi in partinfo_dicts]
 
         return cls(name=d["name"], path=path, partinfo=partinfo)
+
+    def load(self):
+        sr = stepreader.StepReader()
+        sr.load(str(self.path))
+        self._CADSource__step = sr
 
 
 class TaskInfo:
