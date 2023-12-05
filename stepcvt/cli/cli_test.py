@@ -32,7 +32,7 @@ tests = {
     "part test": "python ./scripts/stepcvt -j json.js addpart --all",  # adding the parts
     "stl test": "python ./scripts/stepcvt -j json.js stlcvt partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
     "export test": "python ./scripts/stepcvt -j json.js exportstl path",  # exporting the stls
-    "choices add test": "python ./scripts/stepcvt -j json.js choices add-chooser --choice-type single 'Printer Options' 'options' "
+    "choices add test": "python ./scripts/stepcvt -j json.js choices add-chooser --type single 'Printer Options' 'options' "
     "'HEPA filter':'Filter' 'Build area lights':'Lights':'version=='V6''",  # Add a single chooser
     "choices edit test": "python ./scripts/stepcvt choices edit 'options' --choice-value 'Lights' "
     "'Build area lights':'Lights':'version==''V4''",  # rename one of the choice value
