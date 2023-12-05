@@ -10,7 +10,7 @@ from typing import Type
 from stepcvt import stepreader, choices
 import cadquery as cq
 import OCP
-import json
+import os
 
 
 class Project:
@@ -105,7 +105,14 @@ class CADSource:
 
     def parts(self, assemblies=None):
         if assemblies is None:
-            assemblies = self._CADSource__step.assemblies
+            if self._CADSource__step != None:
+                assemblies = self._CADSource__step.assemblies
+            else:
+                # assume that the step file will reside in the tests directory
+                cs = CADSource.load_step_file(
+                    self.name, os.path.join("../tests", self.path)
+                )
+                assemblies = cs._CADSource__step.assemblies
         return self._recursive_parts(assemblies)
 
     def _recursive_parts(self, assemblies):
