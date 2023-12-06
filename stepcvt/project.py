@@ -276,7 +276,7 @@ class PartInfo:
         part_id: str = "",
         info: list = None,
         part: cq.Assembly = None,
-        default_selected=False,
+        default_selected=True,
         count=1,
         scale=1.0,
         choice_effect: [choices.ChoiceEffect] = None,

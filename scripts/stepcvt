@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import sys
+import os
 import json
+import argparse
+from pathlib import Path
 
 sys.path.append("../")
 from stepcvt.project import Project
 from stepcvt.cli import *
-import argparse
 
 
 # load from JSON function
@@ -34,6 +36,22 @@ def writeToJSON(p, args):
     with open(args.jsonfile, "w") as jf:
         json.dump(p.to_dict(), jf, indent="  ")
     return 0
+
+
+def export(p, args):
+    """Export all specified part to stl"""
+    os.makedirs(os.path.dirname(args.path), exist_ok=True)
+    path = Path(args.path)
+    # parts in a single source are grouped and exported together,
+    # unless any of them contains a different export properties (count, scale)
+    for source in p.sources:
+        for part in filter(lambda pi: pi.selected, source.partinfo):
+            if part.count > 1:
+                for i in range(1, part.count + 1):
+                    # TODO: apply the scaling, and export multiple count of part of single stl
+                    part.export_to_stl(path / f"{part.part_id}_{i}.stl")
+            else:
+                part.export_to_stl(path / f"{part.part_id}.stl")
 
 
 if __name__ == "__main__":
@@ -111,7 +129,7 @@ if __name__ == "__main__":
 
     # stepcvt choices add-effect --partid PARTID --type TYPE [--value VALUE] --cond COND
     # exmaple:
-    # stepcvt choiecs add-effect --partid SB_V6_TH_Front --type relative-count --value version=='V6' --cond 2
+    # stepcvt choiecs add-effect --partid SB_V6_TH_Front --type relative-count --cond version=='V6' --value 2
     subp_choices_effect = subp_choices.add_parser(
         "add-effect", help="add a choice effect to a part"
     )
@@ -221,6 +239,16 @@ if __name__ == "__main__":
         "step_name", type=str, help="Name of the step file to list its parts from"
     )
     list_parser.set_defaults(func=source.list_parts)
+
+    # --- Export ---
+    # stepcvt -j JSON exportstl PATH
+    # example:
+    # stepcvt -j stepcvt.json exportstl .
+    subp_export = sp.add_parser(
+        "exportstl", help="Export parts specified in project config to stl"
+    )
+    subp_export.add_argument("path", help="which directory to export stl")
+    subp_export.set_defaults(func=export)
 
     # Dispatch
     args = p.parse_args()

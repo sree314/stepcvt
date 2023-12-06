@@ -23,15 +23,15 @@ def choices_add(project: Project, args):
     values = _parse_values(args.values)
 
     # add new chooser to project
-    if args.choice_type == "single":
+    if args.type == "single":
         project.available_choices.choices.append(
             SingleChooser(args.text, args.varname, values)
         )
-    elif args.choice_type == "multi":
+    elif args.type == "multi":
         project.available_choices.choices.append(
             MultiChooser(args.text, args.varname, values)
         )
-    elif args.choice_type == "boolean":
+    elif args.type == "boolean":
         project.available_choices.choices.append(
             BooleanChooser(args.text, args.varname, values[0], values[1])
         )
