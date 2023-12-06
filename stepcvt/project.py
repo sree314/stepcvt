@@ -398,13 +398,17 @@ class PartInfo:
             self.scale = self._default_scale
             return
 
-        for effect in filter(lambda e: e.cond.eval(user_choices), self.choice_effects):
+        for effect in self.choice_effects:
+            result = effect.cond.eval(user_choices)
+            if isinstance(effect, choices.SelectionEffect):
+                self.selected = result
+                continue
+            if not result:
+                continue
             if isinstance(effect, choices.RelativeCountEffect):
                 self.count += effect.count_delta
             elif isinstance(effect, choices.AbsoluteCountEffect):
                 self.count = effect.count
-            elif isinstance(effect, choices.SelectionEffect):
-                self.selected = True
             elif isinstance(effect, choices.ScaleEffect):
                 self.scale = effect.scale
             else:

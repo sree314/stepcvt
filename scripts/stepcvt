@@ -19,7 +19,7 @@ def loadFromJSON(args):
 
     # try to get info from jsonfile
     try:
-        with open(args.jsonfile, "r") as jf:
+        with open(os.path.expanduser(args.jsonfile), "r") as jf:
             d = json.load(jf)
             p = Project.from_dict(d)
             return p
@@ -33,7 +33,7 @@ def loadFromJSON(args):
 
 # write to JSON function
 def writeToJSON(p, args):
-    with open(args.jsonfile, "w") as jf:
+    with open(os.path.expanduser(args.jsonfile), "w") as jf:
         json.dump(p.to_dict(), jf, indent="  ")
     return 0
 
