@@ -53,12 +53,12 @@ class Project:
             cs.load()
 
     @classmethod
-    def from_dict(cls, d):
+    def from_dict(cls, d, root=None):
         s = None
         if "sources" in d:
             s = []
             for cd in d["sources"]:
-                s.append(CADSource.from_dict(cd))
+                s.append(CADSource.from_dict(cd, root))
 
         available_choices = None
         if "available_choices" in d:
@@ -103,6 +103,7 @@ class CADSource:
         return partinfo
 
     def parts(self, assemblies=None):
+        # TODO: handle repeated part_id
         if assemblies is None:
             if self._CADSource__step != None:
                 assemblies = self._CADSource__step.assemblies
@@ -167,6 +168,11 @@ class CADSource:
         sr = stepreader.StepReader()
         sr.load(str(self.path))
         self._CADSource__step = sr
+
+        # load _cad for partinfo
+        parts = {p: obj for (p, obj) in self.parts()}
+        for pi in self.partinfo:
+            pi._cad = parts[pi.part_id]
 
 
 class TaskInfo:

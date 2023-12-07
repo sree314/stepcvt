@@ -21,7 +21,7 @@ def loadFromJSON(args):
     try:
         with open(os.path.expanduser(args.jsonfile), "r") as jf:
             d = json.load(jf)
-            p = Project.from_dict(d)
+            p = Project.from_dict(d, Path(args.jsonfile).expanduser().parent)
             return p
     except FileNotFoundError as fe:
         print(f"ERROR: {args.jsonfile} doesn't exist")
@@ -40,10 +40,11 @@ def writeToJSON(p, args):
 
 def export(p, args):
     """Export all specified part to stl"""
-    os.makedirs(os.path.dirname(args.path), exist_ok=True)
-    path = Path(args.path)
+    path = Path(args.path).expanduser()
+    os.makedirs(str(path), exist_ok=True)
     # parts in a single source are grouped and exported together,
     # unless any of them contains a different export properties (count, scale)
+    p.load("")  # not sure how tmp_path argument should be used
     for source in p.sources:
         for part in filter(lambda pi: pi.selected, source.partinfo):
             if part.count > 1:
