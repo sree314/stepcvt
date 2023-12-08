@@ -40,8 +40,11 @@ from ..project import *
 
 def make(args):
     p = Project()
+    print("New project created ...", end=" ")
     if args.name:
         p.name = args.name
+        print("Project renamed to ", p.name, " ...", end=" ")
+    print("done")
     return p
 
 
@@ -52,5 +55,7 @@ def display(p, args):
 
 
 def newName(p, args):
+    print("Project being renamed to ", p.name, " ...", end=" ")
     p.name = args.name
+    print("done")
     return 1
