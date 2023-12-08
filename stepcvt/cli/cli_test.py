@@ -31,7 +31,7 @@ tests = {
     "source test 2": "python ./scripts/stepcvt -j json.js addstep C270 scripts/C270_assembly.step",  # adding another source
     "source list": "python ./scripts/stepcvt -j json.js liststep C270",  # lising step parts
     "part test": "python ./scripts/stepcvt -j json.js addpart --all",  # adding the parts
-    "stl test": "python ./scripts/stepcvt -j json.js stlcvt partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
+    "stl test": "python ./scripts/stepcvt -j json.js stlconvert partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
     "export test": "python ./scripts/stepcvt -j json.js exportstl path",  # exporting the stls
     "choices add test": "python ./scripts/stepcvt -j json.js choices add-chooser --type single 'Printer Options' 'options' "
     "'HEPA filter':'Filter' 'Build area lights':'Lights':'version=='V6''",  # Add a single chooser
