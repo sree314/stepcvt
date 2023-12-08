@@ -24,11 +24,11 @@ def stlconvert(p, args):
     else:
         angularTol = 0.1
 
-    for partid, obj in source.parts():
-        if partid == args.partID:
-            if len(obj.info) > 0:
-                for el in obj.info:
-                    if el.gettype() == STLConversionInfo:
+    for partinfo in source.partinfo:
+        if partinfo.part_id == args.partID:
+            if len(partinfo.info) > 0:
+                for el in partinfo.info:
+                    if isinstance(el, STLConversionInfo):
                         # edit existing TaskInfo case
                         el = STLConversionInfo(
                             rotation=rotation,
@@ -37,7 +37,7 @@ def stlconvert(p, args):
                         )
             else:
                 # create new taskInfo object
-                obj.info.append(
+                partinfo.add_info(
                     STLConversionInfo(
                         rotation=rotation,
                         linearTolerance=linearTol,
