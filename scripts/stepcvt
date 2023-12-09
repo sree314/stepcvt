@@ -68,6 +68,9 @@ if __name__ == "__main__":
 
     # --- Part ---
     app = sp.add_parser("addpart", help="Add a part")
+    app.add_argument(
+        "source", type=str, help="Specify the source name for part(s) to be added it"
+    )
     # can be no id specified if --all is used
     app.add_argument("id", nargs="*", help="Specify partid for parts to be added")
     app.add_argument(
@@ -78,10 +81,18 @@ if __name__ == "__main__":
     app.set_defaults(func=part.add_part)
 
     rpp = sp.add_parser("rmpart", help="Remove a part")
+    rpp.add_argument(
+        "source",
+        type=str,
+        help="Specify the source name for part(s) to be removed from",
+    )
     rpp.add_argument("id", nargs="+", help="Specify partid for parts to be removed")
     rpp.set_defaults(func=part.remove_part)
 
     epp = sp.add_parser("editpart", help="Change part properties")
+    epp.add_argument(
+        "source", type=str, help="Specify the source name for part(s) to be edited"
+    )
     # can only change one part at a time
     epp.add_argument("id", help="Specify partid for the part to be edited")
     epp.add_argument(

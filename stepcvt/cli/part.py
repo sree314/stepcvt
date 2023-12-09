@@ -2,14 +2,20 @@ import json
 from ..project import *
 
 
-def check_source(p):
+def check_source(p, args):
     if not p.sources:
         raise Exception("ERROR: No existing source, add one first")
+    source = None
+    for s in p.sources:
+        if s.name == args.source:
+            source = s
+    if not source:
+        raise Exception(f"ERROR: No existing source with name {args.source}")
+    return source
 
 
 def add_part(p, args):
-    check_source(p)
-    source = p.sources[0]
+    source = check_source(p, args)
 
     if args.all == True:  # add all parts
         if source.partinfo:  # not empty
@@ -17,9 +23,11 @@ def add_part(p, args):
             for partid, obj in source.parts():
                 if partid not in existing_ids:
                     source.add_partinfo(partid, obj)
+                    print(f"{partid} has been added to {source.name}")
         else:
             for partid, obj in source.parts():
                 source.add_partinfo(partid, obj)
+                print(f"{partid} has been added to {source.name}")
     else:
         ids = args.id  # parts that need to be added
         if not ids:
@@ -35,12 +43,13 @@ def add_part(p, args):
                         print(f"{partid} has already been added")
                     else:
                         source.add_partinfo(partid, obj)
+                        print(f"{partid} has been added to {source.name}")
     return 1
 
 
 def remove_part(p, args):
-    check_source(p)
-    source = p.sources[0]
+    source = check_source(p, args)
+
     spi = source.partinfo
     spi_copy = spi.copy()
     rids = set(args.id)  # parts that need to be removed
@@ -53,8 +62,8 @@ def remove_part(p, args):
 
 
 def edit_part(p, args):
-    check_source(p)
-    source = p.sources[0]
+    source = check_source(p, args)
+
     edit_id = args.id
     if args.count == None:
         raise NotImplementedError("Can only modify count for now")
@@ -70,4 +79,5 @@ def edit_part(p, args):
     for pi in source.partinfo:
         if edit_id == pi.part_id:
             pi._default_count = args.count
+            print(f"{edit_id}'s default count has been changed to {args.count}")
     return 1
