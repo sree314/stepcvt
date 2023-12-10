@@ -1,0 +1,11 @@
+
+
+
+
+Prepare to convert to stl
+python3 stepcvt -j jsonfile stlconvert partid --rotation --linearTolerance --angularTolerance
+Specify the part for convertion with partid.
+Optionally:
+Specify the rotation of the part with 3 integers x y z.
+Specify the linearTolerance with a float.
+Specify the angularTolerance with a float.
