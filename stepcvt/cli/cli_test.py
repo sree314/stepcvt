@@ -30,7 +30,8 @@ tests = {
     "source test 1": "python ./scripts/stepcvt -j json.js addstep stealth_burner_head scripts/Stealthburner_Printhead_V6.stp",  # adding the source
     "source test 2": "python ./scripts/stepcvt -j json.js addstep C270 scripts/C270_assembly.step",  # adding another source
     "source list": "python ./scripts/stepcvt -j json.js liststep C270",  # lising step parts
-    "part test": "python ./scripts/stepcvt -j json.js addpart --all",  # adding the parts
+    "add part test 1": "python ./scripts/stepcvt -j json.js addpart stealth_burner_head --all",  # adding all the parts to the first source
+    "add part test 2": "python ./scripts/stepcvt -j json.js addpart C270 --all",  # adding all the parts to the second source
     "stl test": "python ./scripts/stepcvt -j json.js stlconvert partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
     "export test": "python ./scripts/stepcvt -j json.js exportstl path",  # exporting the stls
     "choices add test": "python ./scripts/stepcvt -j json.js choices add-chooser --type single 'Printer Options' 'options' "
