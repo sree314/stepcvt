@@ -25,7 +25,7 @@ def test_command(command, test_name):
 # defining the tests
 tests = {
     "Project Test 1": "python ./scripts/stepcvt -j json.js make",  # making the project
-    "Project Test 2": "python ./scripts/stepcvt -j json.js name test",  # renaming the project from 'stepcvt' to 'test'
+    "Project Test 2": "python ./scripts/stepcvt -j json.js newProjName test",  # renaming the project from 'stepcvt' to 'test'
     "Project Test 3": "python ./scripts/stepcvt -j json.js display",  # show the projects contents so far
     "source test 1": "python ./scripts/stepcvt -j json.js addstep stealth_burner_head scripts/Stealthburner_Printhead_V6.stp",  # adding the source
     "source test 2": "python ./scripts/stepcvt -j json.js addstep C270 scripts/C270_assembly.step",  # adding another source
