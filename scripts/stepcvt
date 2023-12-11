@@ -241,7 +241,7 @@ if __name__ == "__main__":
     # removing step
     remove_parser = sp.add_parser("rmstep", help="Remove a step file")
     remove_parser.add_argument(
-        "step_path", type=str, help="Name of the step file to remove"
+        "step_name", type=str, help="Name of the step file to remove"
     )
     remove_parser.set_defaults(func=source.remove_step)
 
