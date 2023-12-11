@@ -1,5 +1,9 @@
-
-
+Making a new project:
+    python3 <stepcvt> [-j] [json file path/name.json] <make> [-n] [specific project "name"]
+Display existing project contents as needed:
+    python3 <stepcvt> [-j] [json file path/name.json] <display>
+Rename existing project:
+    python3 <stepcvt> [-j] [json file path/name.json] <newName> [new "name"]
 Adding a CADSource object to the project:
     python3 stepcvt -j json.js addstep stepname steppath
 Removing an existing CADSource object from a project given its name:
