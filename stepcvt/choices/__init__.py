@@ -279,7 +279,7 @@ class SingleChooser(Chooser):
 
     May be rendered as a list or a bunch of radio buttons.
 
-    Example: NevermoreModel \in {V4, V5, V6}
+    Example: NevermoreModel \\in {V4, V5, V6}
     """
 
     def __init__(self, text: str, varname: str, values: [ChoiceValue]):
@@ -305,7 +305,7 @@ class MultiChooser(Chooser):
     """Represents a choice where multiple values can be selected from a
     list of choices.
 
-    Example: PrinterMods \in {"Lights", "Filter", "FridgeDoor"}
+    Example: PrinterMods \\in {"Lights", "Filter", "FridgeDoor"}
     """
 
     def __init__(self, text: str, varname: str, values: [ChoiceValue]):

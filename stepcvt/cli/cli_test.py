@@ -35,10 +35,10 @@ tests = {
     "export test": "python ./scripts/stepcvt -j json.js exportstl path",  # exporting the stls
     "choices add test": "python ./scripts/stepcvt -j json.js choices add-chooser --type single 'Printer Options' 'options' "
     "'HEPA filter':'Filter' 'Build area lights':'Lights':'version=='V6''",  # Add a single chooser
-    "choices edit test": "python ./scripts/stepcvt choices edit 'options' --choice-value 'Lights' "
-    "'Build area lights':'Lights':'version==''V4''",  # rename one of the choice value
-    "choices remove test": "python ./scripts/stepcvt choices remove 'options' --choice-value 'Lights' --cond",  # remove one option value
-    "choices apply test": "python ./scripts/stepcvt choices apply options=Lights,Filter",  # apply a user choice
+    "choices edit test": "python ./scripts/stepcvt -j json.js choices edit 'options' --choice-value 'Lights' "
+    "'Build area lights':'Lights':'version=='V4''",  # rename one of the choice value
+    "choices remove test": "python ./scripts/stepcvt -j json.js choices remove 'options' --choice-value 'Lights' --cond",  # remove one option value
+    "choices apply test": "python ./scripts/stepcvt -j json.js choices apply options=Lights,Filter",  # apply a user choice
 }
 
 all_tests_passed = True
