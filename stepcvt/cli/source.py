@@ -27,7 +27,6 @@ def add_step(p, args):
 
 
 def remove_step(p, args):
-    # TODO Needs to be implemented
     if args.jsonfile is None:
         print("ERROR: Need to provide a jsonfile")
         return 1
