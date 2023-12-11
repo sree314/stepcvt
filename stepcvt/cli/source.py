@@ -28,7 +28,31 @@ def add_step(p, args):
 
 def remove_step(p, args):
     # TODO Needs to be implemented
-    print(f"Removing step file: {args.step_path} from {args.project}")
+    if args.jsonfile is None:
+        print("ERROR: Need to provide a jsonfile")
+        return 1
+
+    if args.step_name is None:
+        print("Missing step file name")
+    else:
+        print(f"Removing step file: {args.step_name} from {args.jsonfile}")
+        for source in p.sources:
+            if source.name == args.step_name:
+                p.sources.remove(source)
+                print(
+                    f"Removed step file: {args.step_name} from {args.jsonfile} successfully!"
+                )
+
+        try:
+            with open(args.jsonfile, "w") as j:
+                info = p.to_dict()
+                json.dump(info, j, indent=4)
+        except FileNotFoundError as fe:
+            print(f"ERROR: {args.jsonfile} doesn't exist")
+            return 1
+        except json.JSONDecodeError:
+            print("ERROR: Invalid json syntax")
+            return 1
 
 
 def list_parts(p, args):
