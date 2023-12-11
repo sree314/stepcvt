@@ -1,6 +1,11 @@
 
 
-
+Adding a CADSource object to the project
+python3 stepcvt -j json.js addstep stepname steppath
+Removing an existing CADSource object from a project given its name
+python3 stepcvt -j json.js rmstep stepname
+Listing parts of a stepfile given its name
+python3 stepcvt -j json.js liststep stepname
 
 Prepare to convert to stl
 python3 stepcvt -j jsonfile stlconvert partid --rotation --linearTolerance --angularTolerance
