@@ -5,5 +5,5 @@ setup(
     version="0.0.1",
     install_requires=["cadquery-ocp", "cadquery"],
     packages=find_packages(),
-    scripts=[],
+    scripts=["scripts/stepcvt"],
 )

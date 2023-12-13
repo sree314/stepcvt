@@ -2,128 +2,82 @@ import json
 from ..project import *
 
 
-def add_part(args):
-    if args.jsonfile is None:
-        print("ERROR: Need to provide a jsonfile")
-        return 1
-
-    try:
-        with open(args.jsonfile, "r") as jf:
-            d = json.load(jf)
-            p = Project.from_dict(d)
-    except FileNotFoundError as fe:
-        print(f"ERROR: {args.jsonfile} doesn't exist")
-        return 1
-    except json.JSONDecodeError:
-        print("ERROR: Invalid json syntax")
-        return 1
-
+def check_source(p, args):
     if not p.sources:
-        print("ERROR: No existing source, add one first")
-    else:
-        source = p.sources[0]
+        raise Exception("ERROR: No existing source, add one first")
+    source = None
+    for s in p.sources:
+        if s.name == args.source:
+            source = s
+    if not source:
+        raise Exception(f"ERROR: No existing source with name {args.source}")
+    return source
 
-        if args.all == True:  # add all parts
-            if source.partinfo:  # not empty
-                raise NotImplementedError("Cannot add all since partinfo is not empty")
-            else:
-                for partid, obj in source.parts():
+
+def add_part(p, args):
+    source = check_source(p, args)
+
+    if args.all == True:  # add all parts
+        if source.partinfo:  # not empty
+            existing_ids = set([pi.part_id for pi in source.partinfo])
+            for partid, obj in source.parts():
+                if partid not in existing_ids:
                     source.add_partinfo(partid, obj)
-                for pi in source.partinfo:
-                    pi.add_info(CountInfo())
+                    print(f"{partid} has been added to {source.name}")
         else:
-            ids = args.id  # parts that need to be added
-            if not ids:
-                print(
-                    "ERROR: Need to specify at least one partid if --all is not included"
-                )
-                return 1
-            else:
-                ids = set(ids)
-                existing_ids = set([pi.part_id for pi in source.partinfo])
-                for partid, obj in source.parts():
-                    if partid in ids:
-                        if partid in existing_ids:
-                            print(f"{partid} has already been added")
-                        else:
-                            source.add_partinfo(partid, obj)
-                # for pi in source.partinfo:
-                #     pi.add_info(CountInfo())
-
-    with open(args.jsonfile, "w") as jf:
-        json.dump(p.to_dict(), jf)
-    return 0
-
-
-def remove_part(args):
-    if args.jsonfile is None:
-        print("ERROR: Need to provide a jsonfile")
-        return 1
-
-    try:
-        with open(args.jsonfile, "r") as jf:
-            d = json.load(jf)
-            p = Project.from_dict(d)
-    except FileNotFoundError as fe:
-        print(f"ERROR: {args.jsonfile} doesn't exist")
-        return 1
-    except json.JSONDecodeError:
-        print("ERROR: Invalid json syntax")
-        return 1
-
-    if not p.sources:
-        print("ERROR: No existing source, add one first")
+            for partid, obj in source.parts():
+                source.add_partinfo(partid, obj)
+                print(f"{partid} has been added to {source.name}")
     else:
-        source = p.sources[0]
-        spi = source.partinfo
-        rids = set(args.id)  # parts that need to be removed
+        ids = args.id  # parts that need to be added
+        if not ids:
+            raise Exception(
+                "ERROR: Need to specify at least one partid if --all is not included"
+            )
+        else:
+            ids = set(ids)
+            existing_ids = set([pi.part_id for pi in source.partinfo])
+            for partid, obj in source.parts():
+                if partid in ids:
+                    if partid in existing_ids:
+                        print(f"{partid} has already been added")
+                    else:
+                        source.add_partinfo(partid, obj)
+                        print(f"{partid} has been added to {source.name}")
+    return 1
 
-        for pi in spi:
-            if pi.part_id in rids:
-                spi.remove(pi)
 
-    with open(args.jsonfile, "w") as jf:
-        json.dump(p.to_dict(), jf)
-    return 0
+def remove_part(p, args):
+    source = check_source(p, args)
+
+    spi = source.partinfo
+    spi_copy = spi.copy()
+    rids = set(args.id)  # parts that need to be removed
+
+    for pi in spi_copy:
+        if pi.part_id in rids:
+            spi.remove(pi)
+            print(f"{pi.part_id} has been removed.")
+    return 1
 
 
-def edit_part(args):
-    if args.jsonfile is None:
-        print("ERROR: Need to provide a jsonfile")
-        return 1
+def edit_part(p, args):
+    source = check_source(p, args)
 
-    try:
-        with open(args.jsonfile, "r") as jf:
-            d = json.load(jf)
-            p = Project.from_dict(d)
-    except FileNotFoundError as fe:
-        print(f"ERROR: {args.jsonfile} doesn't exist")
-        return 1
-    except json.JSONDecodeError:
-        print("ERROR: Invalid json syntax")
-        return 1
+    edit_id = args.id
+    if args.count == None:
+        raise NotImplementedError("Can only modify count for now")
 
-    if not p.sources:
-        print("ERROR: No existing source, add one first")
-    else:
-        source = p.sources[0]
-        edit_id = args.id
-        if args.count == None:
-            raise NotImplementedError("Can only modify count for now")
+    all_ids = set([p[0] for p in source.parts()])
+    existing_ids = set([pi.part_id for pi in source.partinfo])
 
-        all_ids = set([p[0] for p in source.parts()])
-        existing_ids = set([pi.part_id for pi in source.partinfo])
+    if edit_id not in all_ids:
+        raise Exception("ERROR: Cannot edit a part that doesn't exist")
+    if edit_id not in existing_ids:
+        raise NotImplementedError("Need to add the part first")
 
-        if edit_id not in all_ids:
-            print("ERROR: Cannot edit a part that doesn't exist")
-            return 1
-        if edit_id not in existing_ids:
-            raise NotImplementedError("Need to add the part first")
-
-        for pi in source.partinfo:
-            if edit_id == pi.part_id:
-                pi._default_count = args.count
-
-    with open(args.jsonfile, "w") as jf:
-        json.dump(p.to_dict(), jf)
-    return 0
+    for pi in source.partinfo:
+        if edit_id == pi.part_id:
+            pi._default_count = args.count
+            print(f"{edit_id}'s default count has been changed to {args.count}")
+    return 1

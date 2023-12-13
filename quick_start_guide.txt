@@ -1,0 +1,35 @@
+Making a new project:
+    python3 stepcvt -j filename.json make> -n TestProject
+Display existing project contents as needed:
+    python3 stepcvt -j filename.json display
+Rename existing project:
+    python3 stepcvt -j filename.json newProjName myProjectExample
+Adding a CADSource object to the project:
+    python3 stepcvt -j filename.json addstep stepname steppath
+Removing an existing CADSource object from a project given its name:
+    python3 stepcvt -j filename.json rmstep stepname
+Listing parts of a stepfile given its name:
+    python3 stepcvt -j filename.json liststep stepname
+
+Adding all parts from a particular stepfile:
+    python3 stepcvt -j [jsonfile] addpart [stepname] --all
+
+Adding a single chooser to add an optional feature "Lights" that is only in "V6" and "HEPA Filter"
+    stepcvt -j json.js choices add-chooser "Optional Features" "option"
+        "Lights":"lights":"'version'=='V6'"
+        "HEPA Filter":"filter"
+
+Add choice effect to part to reflect chooser value
+    stepcvt -j json.js choices add-effect --partid "light_mount" --type select --cond "'lights' in option"
+    stepcvt -j json.js choices add-effect --partid "filter_mount" --type select --cond "'filter' in option"
+
+Providing user choice
+    stepcvt -j json.js choices apply option=lights,filter
+
+Prepare to convert to stl:
+    python3 stepcvt -j jsonfile stlconvert partid --rotation --linearTolerance --angularTolerance
+Specify the part for convertion with partid.
+Optionally:
+Specify the rotation of the part with 3 integers x y z.
+Specify the linearTolerance with a float.
+Specify the angularTolerance with a float.

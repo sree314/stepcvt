@@ -1,0 +1,61 @@
+{
+    "type": "Project",
+    "name": "Stealthburner_Printhead_V6.stp",
+    "sources": [
+        {
+            "type": "CADSource",
+            "name": "Stealthburner_Printhead_V6.stp",
+            "path": "Stealthburner_Printhead_V6.stp",
+            "partinfo": [
+                {
+                    "type": "PartInfo",
+                    "part_id": "SB_V6_TH_Front",
+                    "info": [
+                        {
+                            "type": "STLConversionInfo",
+                            "rotation": [
+                                90,
+                                0,
+                                0
+                            ],
+                            "linearTolerance": 0.1,
+                            "angularTolerance": 0.2
+                        }
+                    ]
+                },
+                {
+                    "type": "PartInfo",
+                    "part_id": "SB_V6_TH_Rear_CW2",
+                    "info": [
+                        {
+                            "type": "STLConversionInfo",
+                            "rotation": [
+                                90,
+                                0,
+                                0
+                            ],
+                            "linearTolerance": 0.1,
+                            "angularTolerance": 0.2
+                        }
+                    ]
+                },
+                {
+                    "type": "PartInfo",
+                    "part_id": "SB_V6_TH_Rear_CW1",
+                    "info": [
+                        {
+                            "type": "STLConversionInfo",
+                            "rotation": [
+                                90,
+                                0,
+                                0
+                            ],
+                            "linearTolerance": 0.1,
+                            "angularTolerance": 0.2
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

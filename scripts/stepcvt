@@ -1,17 +1,76 @@
+#!/usr/bin/env python3
 import sys
+import os
+import json
+import argparse
+from pathlib import Path
 
 sys.path.append("../")
+from stepcvt.project import Project
 from stepcvt.cli import *
-import argparse
+
+
+# load from JSON function
+def loadFromJSON(args):
+    # check for jsonfile
+    if args.jsonfile is None:
+        print("ERROR: Need to provide a jsonfile")
+        return 1
+
+    # try to get info from jsonfile
+    try:
+        with open(os.path.expanduser(args.jsonfile), "r") as jf:
+            d = json.load(jf)
+            p = Project.from_dict(d, Path(args.jsonfile).expanduser().parent)
+            return p
+    except FileNotFoundError as fe:
+        print(f"ERROR: {args.jsonfile} doesn't exist")
+        return 1
+    except json.JSONDecodeError:
+        print("ERROR: Invalid json syntax")
+        return 1
+
+
+# write to JSON function
+def writeToJSON(p, args):
+    with open(os.path.expanduser(args.jsonfile), "w") as jf:
+        json.dump(p.to_dict(), jf, indent="  ")
+    return 0
+
+
+def export(p, args):
+    """Export all specified part to stl"""
+    path = Path(args.path).expanduser()
+    os.makedirs(str(path), exist_ok=True)
+    # parts in a single source are grouped and exported together,
+    # unless any of them contains a different export properties (count, scale)
+    p.load("")  # not sure how tmp_path argument should be used
+    for source in p.sources:
+        for part in filter(lambda pi: pi.selected, source.partinfo):
+            if part.count > 1:
+                for i in range(1, part.count + 1):
+                    # TODO: apply the scaling, and export multiple count of part of single stl
+                    part.export_to_stl(path / f"{part.part_id}_{i}.stl")
+            else:
+                part.export_to_stl(path / f"{part.part_id}.stl")
+
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="")
-    p.add_argument("-j", dest="jsonfile", type=str, help="Provide the jsonfile")
-
-    # --- Part ---
+    p.add_argument(
+        "-j",
+        dest="jsonfile",
+        type=str,
+        help="Provide the jsonfile",
+        default="stepcvt.json",
+    )
     sp = p.add_subparsers(dest="command")
 
+    # --- Part ---
     app = sp.add_parser("addpart", help="Add a part")
+    app.add_argument(
+        "source", type=str, help="Specify the source name for part(s) to be added it"
+    )
     # can be no id specified if --all is used
     app.add_argument("id", nargs="*", help="Specify partid for parts to be added")
     app.add_argument(
@@ -22,14 +81,37 @@ if __name__ == "__main__":
     app.set_defaults(func=part.add_part)
 
     rpp = sp.add_parser("rmpart", help="Remove a part")
+    rpp.add_argument(
+        "source",
+        type=str,
+        help="Specify the source name for part(s) to be removed from",
+    )
     rpp.add_argument("id", nargs="+", help="Specify partid for parts to be removed")
     rpp.set_defaults(func=part.remove_part)
 
     epp = sp.add_parser("editpart", help="Change part properties")
+    epp.add_argument(
+        "source", type=str, help="Specify the source name for part(s) to be edited"
+    )
     # can only change one part at a time
     epp.add_argument("id", help="Specify partid for the part to be edited")
-    epp.add_argument("-c", "--count", type=int, help="Change the default count of the part")
+    epp.add_argument(
+        "-c", "--count", type=int, help="Change the default count of the part"
+    )
     epp.set_defaults(func=part.edit_part)
+
+    cvtp = sp.add_parser("stlconvert", help="specify how to convert to stl")
+    cvtp.add_argument("partID", help="Specify partid for parts to be added")
+    cvtp.add_argument(
+        "--rotation", type=int, nargs=3, help="3 integers for x, y, z rotation"
+    )
+    cvtp.add_argument(
+        "--linearTolerance", type=float, help="float for linear tolerance"
+    )
+    cvtp.add_argument(
+        "--angularTolerance", type=float, help="float for angular tolerance"
+    )
+    cvtp.set_defaults(func=task.stlconvert)
 
     # --- Choices ---
     p_choices = sp.add_parser("choices")
@@ -37,12 +119,12 @@ if __name__ == "__main__":
     # stepcvt choices add-chooser [--choices-type TYPE] TEXT VARNAME (TEXT:VARNAME[:COND])+
     # example:
     # stepcvt choices add-chooser --choice-type single "Printer Options" "options"
-    #   --values "HEPA filter":"Filter" "Build area lights":"Lights":"version=='V6'"
+    #   "HEPA filter":"Filter" "Build area lights":"Lights":"version=='V6'"
     subp_choices = p_choices.add_subparsers(help="actions on choices")
     subp_choices_add = subp_choices.add_parser("add-chooser", help="create a choice")
     subp_choices_add.set_defaults(func=choices.choices_add)
     subp_choices_add.add_argument(
-        "--choice-type",
+        "--type",
         choices=["single", "multi", "boolean"],
         default="single",
         help="chooser type",
@@ -55,6 +137,33 @@ if __name__ == "__main__":
         nargs="+",
         help="list of potential value and their optional condition, 'text':'value'[:'cond'], "
         "use [sel_value, unsel_value] for boolean chooser",
+    )
+
+    # stepcvt choices add-effect --partid PARTID --type TYPE [--value VALUE] --cond COND
+    # exmaple:
+    # stepcvt choiecs add-effect --partid SB_V6_TH_Front --type relative-count --cond version=='V6' --value 2
+    subp_choices_effect = subp_choices.add_parser(
+        "add-effect", help="add a choice effect to a part"
+    )
+    subp_choices_effect.set_defaults(func=choices.choices_effect)
+    subp_choices_effect.add_argument(
+        "--partid",
+        required=True,
+        help="specify part id of the part to add choice effect",
+    )
+    subp_choices_effect.add_argument(
+        "--type",
+        required=True,
+        choices=["select", "relative-count", "absolute-count"],
+        help="type of choice effect",
+    )
+    subp_choices_effect.add_argument(
+        "--value",
+        required=len({"relative-count", "absolute-count"} & set(sys.argv)) > 0,
+        help="value provided for the choice effect, not required for select effect",
+    )
+    subp_choices_effect.add_argument(
+        "--cond", required=True, help="condition for the choice to take effect"
     )
 
     # stepcvt choices edit VARNAME [--choice-value TEXT] (TEXT:VARNAME[:COND])+
@@ -91,13 +200,16 @@ if __name__ == "__main__":
         "--choice-value", help="specify a choice value to in the chooser to be removed"
     )
     subp_choices_remove.add_argument(
-        "--cond", help="remove the condition part of a choice value"
+        "--cond",
+        action="store_true",
+        help="remove the condition part of a choice value",
     )
 
     # stepcvt choices apply (VARNAME=VALUE(,EXTRA_VALUES)*)+
     # example:
     # stepcvt choices apply Version=v6 Options=Lights,Filter
     subp_choices_apply = subp_choices.add_parser("apply", help="apply user choice to ")
+    subp_choices_apply.set_defaults(func=choices.choices_apply)
     subp_choices_apply.add_argument(
         "choices_input",
         nargs="+",
@@ -105,5 +217,59 @@ if __name__ == "__main__":
     )
     # TODO: add commands to modify ChoiceEffect?
 
+    # --- Proj ---
+    npn = sp.add_parser("newProjName", help="Change a stepcvt Project's name")
+    npn.add_argument("name", help="Specify the new name")
+    npn.set_defaults(func=proj.newName)
+
+    mnp = sp.add_parser("make", help="Build an exisitng project or new project")
+    mnp.add_argument(
+        "-n", "--name", type=str, help="Name of project if not default stepcvt.json"
+    )
+    mnp.set_defaults(func=proj.make)
+
+    dp = sp.add_parser("display", help="Display the contents of a project")
+    dp.set_defaults(func=proj.display)
+
+    # CADSource
+    # adding step
+    add_parser = sp.add_parser("addstep", help="Add a step file")
+    add_parser.add_argument("step_name", type=str, help="Name of the step file to add")
+    add_parser.add_argument("step_path", type=str, help="Path of the step file to add")
+    add_parser.set_defaults(func=source.add_step)
+
+    # removing step
+    remove_parser = sp.add_parser("rmstep", help="Remove a step file")
+    remove_parser.add_argument(
+        "step_name", type=str, help="Name of the step file to remove"
+    )
+    remove_parser.set_defaults(func=source.remove_step)
+
+    # listing parts
+    list_parser = sp.add_parser("liststep", help="List parts of a step file")
+    list_parser.add_argument(
+        "step_name", type=str, help="Name of the step file to list its parts from"
+    )
+    list_parser.set_defaults(func=source.list_parts)
+
+    # --- Export ---
+    # stepcvt -j JSON exportstl PATH
+    # example:
+    # stepcvt -j stepcvt.json exportstl .
+    subp_export = sp.add_parser(
+        "exportstl", help="Export parts specified in project config to stl"
+    )
+    subp_export.add_argument("path", help="which directory to export stl")
+    subp_export.set_defaults(func=export)
+
+    # Dispatch
     args = p.parse_args()
-    sys.exit(args.func(args))
+    if args.command == "make":
+        writeToJSON(proj.make(args), args)
+    else:
+        p = loadFromJSON(args)
+        if p == 1:
+            sys.exit(1)
+        save = args.func(p, args)
+        if save:
+            writeToJSON(p, args)

@@ -9,13 +9,13 @@ from pathlib import Path, PurePath
 from typing import Type
 from stepcvt import stepreader, choices
 import cadquery as cq
-import OCP
+import os
 
 
 class Project:
     def __init__(
         self,
-        name: str = "",
+        name: str = "stepcvt",
         sources: list = None,
         available_choices: choices.Choices = None,
     ):
@@ -29,8 +29,17 @@ class Project:
     def to_dict(self, root=None):
         s = []
         for cd in self.sources:
-            s.append(CADSource.to_dict(cd))
-        return {"type": "Project", "name": self.name, "sources": s}
+            s.append(CADSource.to_dict(cd, root=root))
+        d = {
+            "type": "Project",
+            "name": self.name,
+            "sources": s,
+        }
+        if len(self.available_choices.choices) != 0:
+            d["available_choices"] = self.available_choices.to_dict()
+        if len(self.user_choices.choices) != 0:
+            d["user_choices"] = self.user_choices.choices
+        return d
 
     def add_source(self, name: str, path: Path):
         if self.sources:
@@ -39,15 +48,26 @@ class Project:
                     raise KeyError("Cannot add source that already exists")
         self.sources.append(CADSource.load_step_file(name, path))
 
+    def load(self, path):
+        for cs in self.sources:
+            cs.load()
+
     @classmethod
-    def from_dict(cls, d):
+    def from_dict(cls, d, root=None):
+        s = None
         if "sources" in d:
             s = []
             for cd in d["sources"]:
-                s.append(CADSource.from_dict(cd))
-            return cls(d["name"], s)
-        else:
-            return cls(d["name"])
+                s.append(CADSource.from_dict(cd, root))
+
+        available_choices = None
+        if "available_choices" in d:
+            available_choices = choices.Choices.from_dict(d["available_choices"])
+
+        p = cls(d["name"], s, available_choices)
+        if "user_choices" in d:
+            p.user_choices.choices = d["user_choices"]
+        return p
 
     def accept_user_choices(self, user_choices: choices.UserChoices):
         # validate user choices
@@ -83,8 +103,13 @@ class CADSource:
         return partinfo
 
     def parts(self, assemblies=None):
+        # TODO: handle repeated part_id
         if assemblies is None:
-            assemblies = self._CADSource__step.assemblies
+            if self._CADSource__step != None:
+                assemblies = self._CADSource__step.assemblies
+            else:
+                cs = CADSource.load_step_file(self.name, self.path)
+                assemblies = cs._CADSource__step.assemblies
         return self._recursive_parts(assemblies)
 
     def _recursive_parts(self, assemblies):
@@ -138,6 +163,16 @@ class CADSource:
         partinfo = [PartInfo.from_dict(pi) for pi in partinfo_dicts]
 
         return cls(name=d["name"], path=path, partinfo=partinfo)
+
+    def load(self):
+        sr = stepreader.StepReader()
+        sr.load(str(self.path))
+        self._CADSource__step = sr
+
+        # load _cad for partinfo
+        parts = {p: obj for (p, obj) in self.parts()}
+        for pi in self.partinfo:
+            pi._cad = parts[pi.part_id]
 
 
 class TaskInfo:
@@ -247,12 +282,14 @@ class PartInfo:
         part_id: str = "",
         info: list = None,
         part: cq.Assembly = None,
-        default_selected=False,
+        default_selected=True,
         count=1,
         scale=1.0,
+        choice_effect: [choices.ChoiceEffect] = None,
     ):
         self.part_id = part_id
         self.info = [] if info is None else info
+        # TODO: find proper usage for _cad field and how to serialize/deserialize
         self._cad: cq.Assembly = part
         self._default_selected = default_selected
         self._default_count = count
@@ -260,7 +297,9 @@ class PartInfo:
         self.selected = self._default_selected
         self.count = self._default_count
         self.scale = self._default_scale
-        self.choice_effects: [choices.ChoiceEffect] = []
+        self.choice_effects: [choices.ChoiceEffect] = (
+            [] if choice_effect is None else choice_effect
+        )
 
     def add_info(self, info: TaskInfo):
         """adds the provided info to the self.info list"""
@@ -301,25 +340,58 @@ class PartInfo:
         return cls(part_id, part=part)
 
     @classmethod
-    def from_dict(cls, dict):
+    def from_dict(cls, d):
         """
         Creates a PartInfo object from dictionary containning necessary information
         """
-        part_id = dict["part_id"]
+        part_id = d["part_id"]
         info: [STLConversionInfo] = []
 
-        info_dict_list: [TaskInfo] = dict["info"]
+        info_dict_list: [TaskInfo] = d["info"]
         for info_dict in info_dict_list:
             info_type: Type[TaskInfo] = TaskInfo.gettype(info_dict["type"])
             info.append(info_type.from_dict(info_dict))
 
-        return cls(part_id, info)
+        effect: [choices.ChoiceEffect] = []
+        if "choice_effect" in d:
+            for effect_dict in d["choice_effect"]:
+                t: Type[choices.ChoiceEffect] = choices.ChoiceEffect.gettype(
+                    effect_dict["type"]
+                )
+                effect.append(t.from_dict(effect_dict))
+
+        p = cls(
+            part_id,
+            info,
+            None,
+            choice_effect=effect,
+        )
+        if "default_selected" in d:
+            p._default_selected = d["default_selected"]
+        if "default_count" in d:
+            p._default_count = d["default_count"]
+        if "default_scale" in d:
+            p._default_scale = d["default_scale"]
+        if "count" in d:
+            p.count = d["count"]
+        if "scale" in d:
+            p.scale = d["scale"]
+        if "selected" in d:
+            p.selected = d["selected"]
+        return p
 
     def to_dict(self):
         return {
             "type": "PartInfo",
             "part_id": self.part_id,
+            "default_count": self._default_count,
+            "default_scale": self._default_scale,
+            "default_selected": self._default_selected,
+            "count": self.count,
+            "scale": self.scale,
+            "selected": self.selected,
             "info": [obj.to_dict() for obj in self.info],
+            "choice_effect": [obj.to_dict() for obj in self.choice_effects],
         }
 
     def update_from_choices(self, user_choices: choices.UserChoices):
@@ -332,13 +404,17 @@ class PartInfo:
             self.scale = self._default_scale
             return
 
-        for effect in filter(lambda e: e.cond.eval(user_choices), self.choice_effects):
+        for effect in self.choice_effects:
+            result = effect.cond.eval(user_choices)
+            if isinstance(effect, choices.SelectionEffect):
+                self.selected = result
+                continue
+            if not result:
+                continue
             if isinstance(effect, choices.RelativeCountEffect):
                 self.count += effect.count_delta
             elif isinstance(effect, choices.AbsoluteCountEffect):
                 self.count = effect.count
-            elif isinstance(effect, choices.SelectionEffect):
-                self.selected = True
             elif isinstance(effect, choices.ScaleEffect):
                 self.scale = effect.scale
             else:

@@ -1,4 +1,3 @@
-import json
 import sys
 
 from stepcvt.choices import *
@@ -12,33 +11,27 @@ def _parse_values(value_strs: [str]) -> [ChoiceValue]:
     try:
         for kv in value_strs:
             l = kv.split(":", maxsplit=3)
-            values.append(ChoiceValue(l[0], l[1], l[2:3] or None))
+            values.append(ChoiceValue(l[0], l[1], (l[2:3] or [None])[0]))
     except IndexError:
         raise SyntaxError("Missing required attribute in text:value[:cond] pair")
+    return values
 
 
-def choices_add(args):
-    # parse json input
-    # TODO: Project.from_dict should throw on any invalid json, this can simplify calling of from_dict function
-    with open(args.jsonfile, "r") as file:
-        project = Project.from_dict(json.load(file))
-    if not project:
-        raise SyntaxError("Error loading project config from json")
-
+def choices_add(project: Project, args):
     # parse new choice
     # split values
     values = _parse_values(args.values)
 
     # add new chooser to project
-    if args.choice_type == "single":
+    if args.type == "single":
         project.available_choices.choices.append(
             SingleChooser(args.text, args.varname, values)
         )
-    elif args.choice_type == "multi":
+    elif args.type == "multi":
         project.available_choices.choices.append(
             MultiChooser(args.text, args.varname, values)
         )
-    elif args.choice_type == "boolean":
+    elif args.type == "boolean":
         project.available_choices.choices.append(
             BooleanChooser(args.text, args.varname, values[0], values[1])
         )
@@ -49,20 +42,42 @@ def choices_add(args):
             )
     # theoretically no other values should appear
 
-    with open(args.jsonfile, "w") as file:
-        json.dump(project.to_dict(), file)
+    return 1
 
 
-def choices_edit(args):
-    # parse json input
-    with open(args.jsonfile, "r") as file:
-        project = Project.from_dict(json.load(file))
-    if not project:
-        raise SyntaxError("Error loading project config from json")
-    choices = project.available_choices
+def choices_effect(project: Project, args):
+    # find specified partid
+    part = None
+    for source in project.sources:
+        for p in source.partinfo:
+            if p.part_id == args.partid:
+                part = p
+                break
+    if not part:
+        raise AttributeError(
+            f"Cannot find partid {args.partid} in provided project config"
+        )
 
+    # create choice effect
+    if args.type == "select":
+        effect = SelectionEffect(args.cond)
+    elif args.type == "relative-count":
+        effect = RelativeCountEffect(args.cond, int(args.value))
+    elif args.type == "absolute-count":
+        effect = AbsoluteCountEffect(args.cond, int(args.value))
+    else:
+        raise AttributeError(f"Unknown choice effect type {args.type}")
+
+    part.choice_effects.append(effect)
+    return 1
+
+
+def choices_edit(project: Project, args):
     # find chooser to edit
-    chooser = next(filter(lambda c: c.varname == args.varname, choices), None)
+    chooser = next(
+        filter(lambda c: c.varname == args.varname, project.available_choices.choices),
+        None,
+    )
     if chooser is None:
         raise SyntaxError(f"Chooser {args.varname} not found in provided project file")
 
@@ -81,7 +96,7 @@ def choices_edit(args):
                 )
         else:
             cv = next(
-                filter(lambda v: v.text == args.choice_value, chooser.values), None
+                filter(lambda v: v.value == args.choice_value, chooser.values), None
             )
         # replace specific ChoiceValue
         if len(values) > 1:
@@ -101,22 +116,16 @@ def choices_edit(args):
                     f"Choice value {args.choice_value} not found in chooser {args.varname}"
                 )
         cv.text = value.text
-        cv.vlaue = value.value
+        cv.value = value.value
         cv.cond = value.cond
     else:
         # replace entire ChoiceValue list
         chooser.values = _parse_values(values)
 
-    with open(args.jsonfile, "w") as file:
-        json.dump(project.to_dict(), file)
+    return 1
 
 
-def choices_remove(args):
-    with open(args.jsonfile, "r") as file:
-        project = Project.from_dict(json.load(file))
-    if not project:
-        raise SyntaxError("Error loading project config from json")
-
+def choices_remove(project: Project, args):
     # select chooser
     chooser = next(
         filter(lambda c: c.varname == args.varname, project.available_choices.choices),
@@ -141,23 +150,21 @@ def choices_remove(args):
     # select cond
     cv.cond = None
 
-    with open(args.jsonfile, "w") as file:
-        json.dump(project.to_dict(), file)
+    return 1
 
 
-def choices_apply(args):
-    with open(args.jsonfile, "r") as file:
-        project = Project.from_dict(json.load(file))
-    if not project:
-        raise SyntaxError("Error loading project config from json")
-
+def choices_apply(project: Project, args):
     user_choices = {}
 
     for kv in args.choices_input:
         k, v = kv.split("=", maxsplit=2)
         user_choices[k] = v.split(",")
+        if len(user_choices[k]) == 1:
+            user_choices[k] = user_choices[k][0]
+        # unwrap if already surrounded by quotes
+        if user_choices[k][0] in {'"', "'"} and user_choices[k][-1] in {'"', "'"}:
+            user_choices[k] = user_choices[k][1:-1]
 
     project.accept_user_choices(UserChoices(user_choices))
 
-    with open(args.jsonfile, "w") as file:
-        json.dump(project.to_dict(), file)
+    return 1
