@@ -1,18 +1,5 @@
-python3 ./scripts/stepcvt -j json.js make
-python3 ./scripts/stepcvt -j json.js newProjName test
-python3 ./scripts/stepcvt -j json.js display
-python3 ./scripts/stepcvt -j json.js addstep stealth_burner_head scripts/Stealthburner_Printhead_V6.stp
-python3 ./scripts/stepcvt -j json.js liststep stealth_burner_head
-python3 ./scripts/stepcvt -j json.js addpart stealth_burner_head --all
-python3 ./scripts/stepcvt -j json.js stlconvert partID --rotation 0 0 0 --linearTolerance 0.1 --angularTolerance 0.1
-python3 ./scripts/stepcvt -j json.js exportstl path
-python3 ./scripts/stepcvt -j json.js choices add-chooser --type single 'Printer Options' 'options'
-python3 ./scripts/stepcvt -j json.js choices edit 'options' --choice-value 'Lights'
-python3 ./scripts/stepcvt -j json.js choices apply options=Lights,Filter
-
-
 Making a new project:
-    python3 stepcvt -j filename.json make> -n TestProject
+    python3 stepcvt -j filename.json make -n TestProject
 Display existing project contents as needed:
     python3 stepcvt -j filename.json display
 Rename existing project:
@@ -40,9 +27,23 @@ Providing user choice
     stepcvt -j json.js choices apply option=lights,filter
 
 Prepare to convert to stl:
-    python3 stepcvt -j jsonfile stlconvert partid --rotation --linearTolerance --angularTolerance
+    python3 stepcvt -j jsonfile stlconvert partid --rotation xval yval zval --linearTolerance value --angularTolerance value
 Specify the part for convertion with partid.
 Optionally:
 Specify the rotation of the part with 3 integers x y z.
 Specify the linearTolerance with a float.
 Specify the angularTolerance with a float.
+
+
+Stealth Burner Example:
+python3 ./scripts/stepcvt -j json.js make
+python3 ./scripts/stepcvt -j json.js newProjName test
+python3 ./scripts/stepcvt -j json.js display
+python3 ./scripts/stepcvt -j json.js addstep stealth_burner_head scripts/Stealthburner_Printhead_V6.stp
+python3 ./scripts/stepcvt -j json.js liststep stealth_burner_head
+python3 ./scripts/stepcvt -j json.js addpart stealth_burner_head --all
+python3 ./scripts/stepcvt -j json.js stlconvert SB_V6_TH_Front --rotation 90 0 0 --linearTolerance 0.1 --angularTolerance 0.1
+python3 ./scripts/stepcvt -j json.js exportstl path
+python3 ./scripts/stepcvt -j json.js choices add-chooser --type single 'Printer Options' 'options'
+python3 ./scripts/stepcvt -j json.js choices edit 'options' --choice-value 'Lights'
+python3 ./scripts/stepcvt -j json.js choices apply options=Lights,Filter
