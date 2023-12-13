@@ -1,3 +1,16 @@
+python3 ./scripts/stepcvt -j json.js make
+python3 ./scripts/stepcvt -j json.js newProjName test
+python3 ./scripts/stepcvt -j json.js display
+python3 ./scripts/stepcvt -j json.js addstep stealth_burner_head scripts/Stealthburner_Printhead_V6.stp
+python3 ./scripts/stepcvt -j json.js liststep stealth_burner_head
+python3 ./scripts/stepcvt -j json.js addpart stealth_burner_head --all",  # adding all the parts to the first source
+python3 ./scripts/stepcvt -j json.js stlconvert partID --rotation 0 0 0 --linearTolerance 0.1 --angularTolerance 0.1",  # adding angular/linear tolerances
+python3 ./scripts/stepcvt -j json.js exportstl path",  # exporting the stls
+python3 ./scripts/stepcvt -j json.js choices add-chooser --type single 'Printer Options' 'options' "
+python3 ./scripts/stepcvt -j json.js choices edit 'options' --choice-value 'Lights' "
+python3 ./scripts/stepcvt -j json.js choices apply options=Lights,Filter",  # apply a user choice
+
+
 Making a new project:
     python3 stepcvt -j filename.json make> -n TestProject
 Display existing project contents as needed:
