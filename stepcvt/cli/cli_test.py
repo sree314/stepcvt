@@ -31,7 +31,7 @@ tests = {
     "source list": "python ./scripts/stepcvt -j json.js liststep stealth_burner_head",  # lising step parts
     "source remove": "python ./scripts/stepcvt -j json.js rmstep stealth_burner_head",  # removing the source
     "source add part": "python ./scripts/stepcvt -j json.js addpart stealth_burner_head --all",  # adding all the parts to the first source
-    "stl test": "python ./scripts/stepcvt -j json.js stlconvert partID --rotation --linearTolerance --angularTolerance",  # adding angular/linear tolerances
+    "stl test": "python ./scripts/stepcvt -j json.js stlconvert partID --rotation 0 0 0 --linearTolerance 0.1 --angularTolerance 0.1",  # adding angular/linear tolerances
     "export test": "python ./scripts/stepcvt -j json.js exportstl path",  # exporting the stls
     "choices add test": "python ./scripts/stepcvt -j json.js choices add-chooser --type single 'Printer Options' 'options' "
     "'HEPA filter':'Filter' 'Build area lights':'Lights':'version=='V6''",  # Add a single chooser
