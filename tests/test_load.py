@@ -24,7 +24,7 @@ def test_load(tmp_path):
 
     x = p.to_dict(root=model_file.parent)
 
-    p2 = Project.from_dict(x)
+    p2 = Project.from_dict(x, tmp_path)
 
     # this passes the path which is where the JSON file lives, since
     # usually that is where all the paths inside the file are relative to.
