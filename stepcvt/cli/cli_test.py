@@ -27,9 +27,10 @@ tests = {
     "Project Test 1": "python3 ./scripts/stepcvt -j json.js make",  # making the project
     "Project Test 2": "python3 ./scripts/stepcvt -j json.js newProjName test",  # renaming the project from 'stepcvt' to 'test'
     "Project Test 3": "python3 ./scripts/stepcvt -j json.js display",  # show the projects contents so far
-    "source add": "python3 ./scripts/stepcvt -j json.js addstep stealth_burner_head scripts/Stealthburner_Printhead_V6.stp",  # adding the source
+    "source add": "python ./scripts/stepcvt -j json.js addstep stealth_burner_head scripts/Stealthburner_Printhead_V6.stp",  # adding the source
     "source list": "python3 ./scripts/stepcvt -j json.js liststep stealth_burner_head",  # lising step parts
     "source remove": "python3 ./scripts/stepcvt -j json.js rmstep stealth_burner_head",  # removing the source
+    "source": "python ./scripts/stepcvt -j json.js addstep stealth_burner_head scripts/Stealthburner_Printhead_V6.stp",  # adding the source again
     "source add part": "python3 ./scripts/stepcvt -j json.js addpart stealth_burner_head --all",  # adding all the parts to the first source
     "stl test": "python3 ./scripts/stepcvt -j json.js stlconvert partID --rotation 0 0 0 --linearTolerance 0.1 --angularTolerance 0.1",  # adding angular/linear tolerances
     "export test": "python3 ./scripts/stepcvt -j json.js exportstl path",  # exporting the stls
