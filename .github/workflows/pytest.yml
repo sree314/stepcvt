@@ -20,4 +20,4 @@ jobs:
         python3 -m pip install pytest
     - name: Run tests
       run: |
-        pytest
+        pytest --ignore=tests/cli_test.py

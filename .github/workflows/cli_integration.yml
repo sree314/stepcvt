@@ -19,4 +19,4 @@ jobs:
         python3 setup.py develop
     - name: Run tests
       run: |
-        python3 stepcvt/cli/cli_test.py
+        python3 tests/cli_test.py
